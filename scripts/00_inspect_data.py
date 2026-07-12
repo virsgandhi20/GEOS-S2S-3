@@ -29,12 +29,13 @@ import numpy as np
 import xarray as xr
 
 # ===== settings ============================================================
-# roots to try when no path is given on the command line
+# roots to try when no path is given on the command line. the GEOS-S2S-2
+# forecast archive sits under runx/, organised as
+#   runx/<year>/<MMDD init>/ens<member>/<collection>/<MMDD>.<collection>.monthly.<YYYYMM>.nc4
 CANDIDATE_ROOTS = [
-    "/discover/nobackup/projects/gmao/geos-s2s-2",
-    "/discover/nobackup/projects/gmao/geos_s2s_2",
+    "/discover/nobackup/projects/gmao/m2oasf/aogcm/g5fcst/forecast/production/geos-s2s/runx",
 ]
-FILE_PATTERN = "*.nc4"     # what a data file looks like
+FILE_PATTERN = "*.monthly.*.nc4"   # the monthly files, one per lead
 MAX_DEPTH    = 8           # how deep to search below the root
 MAX_MATCHES  = 20          # stop after finding this many files
 # ===========================================================================
