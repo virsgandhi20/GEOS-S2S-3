@@ -46,6 +46,10 @@ SOURCES     = ["members", "ensmean"]
 # which ensemble members (the "members" source): "*" for all found, "1" for ens1
 MEMBERS     = "1"
 
+# an initialization needs at least this many years to define a climatology
+# (the ensmean tree has stray single-year entries, e.g. jul 1991 only)
+MIN_CLIM_YEARS = 10
+
 # where the forecasts live. GEOS-S2S-2 on Discover for now; point these at the
 # GEOS-S2S-3 trees on NAS once access comes through.
 DATA_ROOT    = "/discover/nobackup/projects/gmao/m2oasf/aogcm/g5fcst/forecast/production/geos-s2s/runx"
@@ -103,11 +107,22 @@ def main():
 
                     # lead-dependent climatology: for each initialization (a
                     # start date for members, a month for ensmean), the mean
-                    # over years
+                    # over years. Groups with too few years give a degenerate
+                    # climatology (one year: anomaly identically zero), so
+                    # they are dropped.
                     by_init = {}
                     for record in records:
                         by_init.setdefault(record["init"],
                                            []).append(record["field"])
+                    for init in [i for i, f in by_init.items()
+                                 if len(f) < MIN_CLIM_YEARS]:
+                        print(f"  climatology {init}: only "
+                              f"{len(by_init[init])} forecasts, skipped")
+                        del by_init[init]
+                    records = [r for r in records if r["init"] in by_init]
+                    if not records:
+                        print("  nothing left after the climatology check")
+                        continue
                     climatology = {init: xr.concat(fields, "case").mean("case")
                                    for init, fields in by_init.items()}
                     for init, fields in sorted(by_init.items()):
