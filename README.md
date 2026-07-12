@@ -48,21 +48,44 @@ outputs/     forecast indices and figures
 docs/        notes
 ```
 
+## What the archive looks like (GEOS-S2S-2 on Discover)
+
+```
+runx/<year>/<init, e.g. feb10>/ens<member>/geosgcm_vis2d/
+    feb10.geosgcm_vis2d.monthly.<verifying YYYYMM>.nc4
+```
+
+- hindcast years from 1981; initializations every five days (dec02, dec07, ...)
+- one monthly file per lead: the partial initialization month plus about nine
+  full lead months
+- `H500` and `H250` come ready-made in `geosgcm_vis2d`, in metres
+- the atmospheric grid is the same half-degree grid as GiOCEAN, so the fit
+  needs no regridding (the code falls back to interpolation if a future
+  dataset differs)
+- member numbering varies by initialization (most have `ens1`; some carry
+  `ens2` to `ens5` instead), so members are found by glob, never assumed
+
 ## Running it
 
 ```bash
 module load python/GEOSpyD
-python scripts/00_inspect_data.py /path/to/geos-s2s-2   # look at the data first
+python scripts/00_inspect_data.py            # look at the data
+python scripts/01_forecast_indices.py        # the projection
 ```
 
-The projection script comes after the inspection settles the file layout,
-naming, grid and how the initialization and lead information is stored.
+`01_forecast_indices.py` writes one CSV per level, initialization season and
+lead (`outputs/500hPa/DJF/20N_90N/lead1/forecast_indices.csv`), with a row per
+forecast: init date, member, verifying month, and the index for each mode. The
+anomaly is taken against the mean over years for the same initialization date
+and lead, so the model's drift is removed. Settings (levels, seasons, leads,
+members, years, data root, pattern file) are at the top.
 
 ## Status
 
 - [x] Repo scaffold
 - [x] GiOCEAN saves its patterns (`patterns.nc`) for use here
-- [ ] Locate the GEOS-S2S-2 tree on Discover and inspect a file
-- [ ] Forecast climatology found (per initialization month and lead) or computed
-- [ ] Projection script (anomaly, weighting, least squares, scaling)
+- [x] GEOS-S2S-2 tree located and inspected (grid matches GiOCEAN)
+- [x] Projection script (anomaly, weighting, least squares, scaling)
+- [ ] First run, and a check of the indices against known winters
+- [ ] Ensemble handling settled with Young-Kwon's approach (his runs used four members)
 - [ ] Switch the data root to GEOS-S2S-3 on NAS once access comes through
