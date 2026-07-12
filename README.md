@@ -74,12 +74,16 @@ python scripts/00_inspect_data.py            # look at the data
 python scripts/01_forecast_indices.py        # the projection
 ```
 
-`01_forecast_indices.py` writes one CSV per level, initialization season and
-lead (`outputs/500hPa/DJF/20N_90N/lead1/forecast_indices.csv`), with a row per
-forecast: init date, member, verifying month, and the index for each mode. The
-anomaly is taken against the mean over years for the same initialization date
-and lead, so the model's drift is removed. Settings (levels, seasons, leads,
-members, years, data root, pattern file) are at the top.
+`01_forecast_indices.py` processes two input sources, each written to its own
+folder (`outputs/500hPa/DJF/20N_90N/lead1/members/` and `.../lead1/ensmean/`),
+with a row per forecast: init date, member, verifying month, and the index for
+each mode. The "members" source reads the individual forecasts, one per
+five-day start date; the "ensmean" source reads the pre-averaged product, one
+forecast per initialization month, where the averaging over start dates and
+members has already been done. In both cases the anomaly is taken against the
+mean over years for the same initialization and lead, so the model's drift is
+removed. Settings (sources, levels, seasons, leads, members, years, data roots,
+pattern file) are at the top.
 
 ## More detail
 

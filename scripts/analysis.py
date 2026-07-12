@@ -60,6 +60,33 @@ def find_forecasts(root, years, init_months, lead,
     return records
 
 
+def find_ensemble_mean(root, years, init_months, lead,
+                       collection="geosgcm_vis2d"):
+    """Find the pre-averaged (ensemble mean) monthly forecast files. These sit
+    in their own tree, one file per initialization month and verifying month,
+    with the averaging over start dates and members already done:
+
+        <root>/<year>/<mon>.<collection>.monthly.<verifying YYYYMM>.nc4
+
+    Returns records shaped like those from find_forecasts, with the member set
+    to "ensmean" and the initialization identified by month name alone."""
+    records = []
+    for year in years:
+        for month in init_months:
+            v_year, v_month = verifying_month(year, month, lead)
+            tag = f"{v_year}{v_month:02d}"
+            pattern = os.path.join(
+                str(root), str(year),
+                f"{_MONTH_DIR[month]}.{collection}.monthly.{tag}.nc4")
+            for path in sorted(glob.glob(pattern)):
+                records.append({"year": year,
+                                "init": _MONTH_DIR[month],
+                                "member": "ensmean",
+                                "verifying": tag,
+                                "path": path})
+    return records
+
+
 def read_field(path, variable, lat, lon, level=None):
     """Read one field and put it on the pattern grid. Give `level` (hPa) when
     the file carries the variable on pressure levels (the GEOS-S2S-3 style

@@ -169,10 +169,20 @@ as a 2D field). It differs from the hindcast processing in two respects:
 ## Outputs
 
 ```
-outputs/<level>hPa/<season>/<region>/lead<L>/forecast_indices.csv   hindcasts
-outputs/<label>/<level>hPa/<region>/forecast_indices.csv           one live forecast
-outputs/<label>/<level>hPa/<region>/indices.png                    its summary figure
+outputs/<level>hPa/<season>/<region>/lead<L>/<source>/forecast_indices.csv   hindcasts
+outputs/<label>/<level>hPa/<region>/forecast_indices.csv                    one live forecast
+outputs/<label>/<level>hPa/<region>/indices.png                             its summary figure
 ```
+
+Hindcasts are produced from two input sources, written to separate folders so
+the results can be compared: `members` processes the individual forecasts (one
+per five-day start date, one row per member), while `ensmean` processes the
+archive's pre-averaged product, one forecast per initialization month.
+Averaging over members retains the predictable part of a forecast and damps
+the unpredictable part, so the ensemble-mean indices are smoother and fewer;
+the per-member indices are noisier but show the spread between forecasts. The
+climatology grouping adapts to the source: per start date for `members`, per
+initialization month for `ensmean`.
 
 A hindcast row records the initialization date, the member, the verifying
 month, and the ten indices for that forecast. All values are in standard
