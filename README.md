@@ -96,6 +96,8 @@ never saw, and the checks used to trust it.
 - [x] Real-time script for a single forecast (the February 2026 case, in the
       GiOCEAN-style pressure-level format; anomaly against the reanalysis
       monthly mean until a drift-corrected climatology is settled)
-- [ ] First run, and a check of the indices against known winters
+- [x] First run: 448 winter and 396 summer hindcasts indexed; the mean
+      index is zero as required, and the 2009/10 negative NAO winter shows
+      up clearly, including the flip as start dates approached the event
 - [ ] Ensemble handling settled with Young-Kwon's approach (his runs used four members)
 - [ ] Switch the data root to GEOS-S2S-3 on NAS once access comes through
