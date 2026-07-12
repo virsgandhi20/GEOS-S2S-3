@@ -66,7 +66,10 @@ def find_ensemble_mean(root, years, init_months, lead,
     in their own tree, one file per initialization month and verifying month,
     with the averaging over start dates and members already done:
 
-        <root>/<year>/<mon>.<collection>.monthly.<verifying YYYYMM>.nc4
+        <root>/<year>/<mon>/<mon>.<collection>.monthly.<verifying YYYYMM>.nc4
+
+    (Each mean file has a .var.nc4 companion holding the variance across
+    members; the exact-name match leaves those out.)
 
     Returns records shaped like those from find_forecasts, with the member set
     to "ensmean" and the initialization identified by month name alone."""
@@ -76,7 +79,7 @@ def find_ensemble_mean(root, years, init_months, lead,
             v_year, v_month = verifying_month(year, month, lead)
             tag = f"{v_year}{v_month:02d}"
             pattern = os.path.join(
-                str(root), str(year),
+                str(root), str(year), _MONTH_DIR[month],
                 f"{_MONTH_DIR[month]}.{collection}.monthly.{tag}.nc4")
             for path in sorted(glob.glob(pattern)):
                 records.append({"year": year,
