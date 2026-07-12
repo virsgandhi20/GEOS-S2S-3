@@ -1,11 +1,12 @@
 # GEOS-S2S forecast teleconnection indices
 
 Applying the rotated patterns found in the GiOCEAN work to GEOS-S2S forecast
-fields. Instead of finding new modes here, each forecast height anomaly is
-fitted against the historical rotated patterns by least squares, which gives a
-teleconnection index for every forecast month and lead. That tells us which
-phase of each pattern (NAO, PNA and so on) the model predicts, and lets us
-compare forecast indices against the historical record on the same scale.
+fields. No new modes are derived here; each forecast height anomaly is fitted
+against the historical rotated patterns by least squares, giving a
+teleconnection index for every forecast month and lead. The indices state which
+phase of each pattern (NAO, PNA and so on) the model predicts, on the same
+scale as the historical record, so forecast and observation are directly
+comparable.
 
 ## The dataset (and why the path is a setting)
 
@@ -18,15 +19,15 @@ run carries about nine lead months. The conventions used here:
 - picking a season at a fixed lead shifts the verifying months (initializations
   in D, J, F at lead 1 verify in J, F, M)
 
-The version we ultimately want, GEOS-S2S-3, lives on NAS, which we don't have
-access to yet. A close relative, GEOS-S2S-2, is on Discover. The code is being
-built against the Discover copy, with the data root kept as a setting so
+The target dataset, GEOS-S2S-3, resides on NAS, to which access is pending.
+Its close relative, GEOS-S2S-2, is available on Discover. The code is built
+against the Discover copy, with the data root kept as a setting so that
 switching to the NAS dataset later is a one-line change.
 
 ## The method
 
 1. Load the historical rotated patterns from the GiOCEAN analysis (saved by
-   that repo as `patterns.nc`, together with each index's mean and spread).
+   that repository as `patterns.nc`, together with each index's mean and spread).
 2. Form the forecast anomaly: forecast minus the forecast climatology for the
    same initialization month and lead. Forecast models drift with lead time, so
    the climatology has to be lead-dependent.
@@ -89,15 +90,16 @@ never saw, and the checks used to trust it.
 
 ## Status
 
-- [x] Repo scaffold
+- [x] Repository scaffold
 - [x] GiOCEAN saves its patterns (`patterns.nc`) for use here
 - [x] GEOS-S2S-2 tree located and inspected (grid matches GiOCEAN)
 - [x] Projection script (anomaly, weighting, least squares, scaling)
 - [x] Real-time script for a single forecast (the February 2026 case, in the
       GiOCEAN-style pressure-level format; anomaly against the reanalysis
       monthly mean until a drift-corrected climatology is settled)
-- [x] First run: 448 winter and 396 summer hindcasts indexed; the mean
-      index is zero as required, and the 2009/10 negative NAO winter shows
-      up clearly, including the flip as start dates approached the event
+- [x] First run: 448 winter and 396 summer hindcasts indexed; the mean index
+      is zero as required, and the 2009/10 negative NAO winter appears
+      clearly, including the transition from positive to negative indices as
+      the initialization dates approached the event
 - [ ] Ensemble handling settled with Young-Kwon's approach (his runs used four members)
 - [ ] Switch the data root to GEOS-S2S-3 on NAS once access comes through
