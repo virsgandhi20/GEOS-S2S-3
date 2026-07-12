@@ -80,6 +80,13 @@ anomaly is taken against the mean over years for the same initialization date
 and lead, so the model's drift is removed. Settings (levels, seasons, leads,
 members, years, data root, pattern file) are at the top.
 
+## More detail
+
+`docs/methodology.md` walks through the whole calculation step by step, with the
+reasoning behind each piece: the drift-corrected climatology, the weighting, the
+least-squares fit, the scaling, why the method is valid on data the patterns
+never saw, and the checks used to trust it.
+
 ## Status
 
 - [x] Repo scaffold
