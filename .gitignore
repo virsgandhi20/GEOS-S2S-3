@@ -1,0 +1,24 @@
+# data (lives on Discover / NAS, not in the repo)
+data/
+*.nc
+*.nc4
+*.tar
+
+# large intermediate arrays (figures ARE tracked so they sync to GitHub)
+outputs/**/*.npy
+outputs/**/*.nc
+outputs/**/*.nc4
+
+# python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# os / editor
+.DS_Store
+.vscode/
+.idea/
