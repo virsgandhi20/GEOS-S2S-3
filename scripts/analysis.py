@@ -60,19 +60,40 @@ def find_forecasts(root, years, init_months, lead,
     return records
 
 
-def read_field(path, variable, lat, lon):
-    """Read one 2D field and put it on the pattern grid. The GEOS-S2S-2
-    atmospheric grid matches the GiOCEAN grid exactly, so this is normally just
-    a subset; if the grids ever differ (the NAS dataset later), it falls back
-    to interpolation."""
+def read_field(path, variable, lat, lon, level=None):
+    """Read one field and put it on the pattern grid. Give `level` (hPa) when
+    the file carries the variable on pressure levels (the GEOS-S2S-3 style
+    files); leave it out for ready-made 2D fields like H500 in vis2d.
+
+    The GEOS-S2S atmospheric grids match the GiOCEAN grid exactly, so this is
+    normally just a subset; if a grid ever differs (ERA5, for example), it
+    falls back to interpolation."""
     with xr.open_dataset(path) as data:
-        field = data[variable].isel(time=0).load()
+        field = data[variable]
+        if level is not None:
+            field = field.sel(lev=level, method="nearest")
+        field = field.isel(time=0).load()
     sub = field.sel(lat=slice(float(lat.min()), float(lat.max())),
                     lon=slice(float(lon.min()), float(lon.max())))
     if (sub.lat.size == lat.size and sub.lon.size == lon.size
             and np.allclose(sub.lat, lat) and np.allclose(sub.lon, lon)):
         return sub
     return field.interp(lat=lat, lon=lon)
+
+
+def reanalysis_month_mean(data_dir, variable, level, month, years, lat, lon):
+    """The long-term mean of one calendar month from the reanalysis the
+    patterns were built on, on the pattern grid. Used as the baseline the
+    real-time forecast anomaly is taken against."""
+    fields = []
+    for year in years:
+        for path in sorted(glob.glob(os.path.join(
+                data_dir, f"*.monthly.{year}{month:02d}.nc4"))):
+            fields.append(read_field(path, variable, lat, lon, level=level))
+    if not fields:
+        raise SystemExit(f"no reanalysis files found for month {month:02d} "
+                         f"under {data_dir}")
+    return xr.concat(fields, "case").mean("case")
 
 
 def area_weight(field):

@@ -86,6 +86,9 @@ members, years, data root, pattern file) are at the top.
 - [x] GiOCEAN saves its patterns (`patterns.nc`) for use here
 - [x] GEOS-S2S-2 tree located and inspected (grid matches GiOCEAN)
 - [x] Projection script (anomaly, weighting, least squares, scaling)
+- [x] Real-time script for a single forecast (the February 2026 case, in the
+      GiOCEAN-style pressure-level format; anomaly against the reanalysis
+      monthly mean until a drift-corrected climatology is settled)
 - [ ] First run, and a check of the indices against known winters
 - [ ] Ensemble handling settled with Young-Kwon's approach (his runs used four members)
 - [ ] Switch the data root to GEOS-S2S-3 on NAS once access comes through
