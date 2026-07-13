@@ -42,7 +42,7 @@ VARIABLE     = "H"             # pressure-level height in these files
 LEVELS       = [500, 250]
 DOMAIN       = "20N_90N"
 
-# historical patterns (written by the GiOCEAN repo) and which pattern season to
+# historical patterns (written by the GiOCEAN repository) and which pattern season to
 # use for each verifying month. MAM and SON need those seasons added to the
 # GiOCEAN run first; leads whose pattern file is missing are skipped with a note.
 PATTERNS     = "/discover/nobackup/vgandhi2/GiOCEAN/outputs/{level}hPa/{season}/{domain}/regression/patterns.nc"

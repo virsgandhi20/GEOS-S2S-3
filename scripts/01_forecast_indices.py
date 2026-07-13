@@ -56,7 +56,7 @@ DATA_ROOT    = "/discover/nobackup/projects/gmao/m2oasf/aogcm/g5fcst/forecast/pr
 ENSMEAN_ROOT = "/gpfsm/dnb10/projects/p71/aogcm/g5fcst/forecast/production/geos-s2s/runx/ensmean"
 COLLECTION   = "geosgcm_vis2d"
 
-# the historical patterns to fit against (written by the GiOCEAN repo's
+# the historical patterns to fit against (written by the GiOCEAN repository's
 # regression display) and the region they were found on
 DOMAIN      = "20N_90N"
 PATTERNS    = "/discover/nobackup/vgandhi2/GiOCEAN/outputs/{level}hPa/{season}/{domain}/regression/patterns.nc"

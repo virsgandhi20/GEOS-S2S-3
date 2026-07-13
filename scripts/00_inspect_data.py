@@ -4,11 +4,12 @@ Have a look at the forecast data before writing any analysis code.
 GEOS-S2S is a forecast dataset, so the files are organised very differently
 from a reanalysis: there is a new initialization every five days, each with its
 own set of lead months (and possibly ensemble members). Before the projection
-code can be written we need to see the directory layout, the file naming, the
-variables inside, the grid, and how the time/lead information is stored.
+code can be written, the directory layout, the file naming, the variables
+inside, the grid, and the way the time/lead information is stored all have
+to be seen.
 
 This script does two things:
-  - survey a directory: list what's under it and find a few forecast files
+  - survey a directory: list its contents and find a few forecast files
   - inspect one file: print its variables, dimensions and coordinates
 
 Usage (on Discover):
@@ -16,7 +17,7 @@ Usage (on Discover):
     python scripts/00_inspect_data.py /path/to/the/geos-s2s-2/tree
     python scripts/00_inspect_data.py /full/path/to/one_file.nc4
 
-If you don't know where the GEOS-S2S-2 tree is, try:
+To locate the GEOS-S2S-2 tree, try:
     ls /discover/nobackup/projects/gmao | grep -i s2s
 or check the paths used inside Priyanka's Tele-V2-Retro scripts.
 """
