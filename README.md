@@ -71,7 +71,9 @@ runx/<year>/<init, e.g. feb10>/ens<member>/geosgcm_vis2d/
 ```bash
 module load python/GEOSpyD
 python scripts/00_inspect_data.py            # look at the data
-python scripts/01_forecast_indices.py        # the projection
+python scripts/01_forecast_indices.py        # hindcast indices
+python scripts/02_realtime_indices.py        # one live forecast
+python scripts/03_verification_plot.py       # forecast vs observed figures
 ```
 
 `01_forecast_indices.py` processes two input sources, each written to its own
@@ -84,6 +86,12 @@ members has already been done. In both cases the anomaly is taken against the
 mean over years for the same initialization and lead, so the model's drift is
 removed. Settings (sources, levels, seasons, leads, members, years, data roots,
 pattern file) are at the top.
+
+`03_verification_plot.py` draws one figure per mode alongside each hindcast
+CSV: the pattern map on top, and below it the forecast index (the average
+over everything verifying in a month, in black) against the historical
+GiOCEAN index (blue), with their correlation printed. At lead 1 the leading
+winter modes correlate at about 0.6.
 
 ## More detail
 
@@ -106,5 +114,13 @@ never saw, and the checks used to trust it.
       is zero as required, and the 2009/10 negative NAO winter appears
       clearly, including the transition from positive to negative indices as
       the initialization dates approached the event
-- [ ] Ensemble handling settled with Young-Kwon's approach (his runs used four members)
+- [x] Verification figures for all ten modes, both sources: forecast index
+      against the GiOCEAN index with the correlation printed
+- [ ] Ensemble handling settled with Young-Kwon's approach (his runs used
+      four members, ens2 to ens5)
+- [ ] Index computation switched from the simultaneous least-squares fit to
+      projection onto each standardized observed pattern, per the group's
+      convention (details to be settled)
 - [ ] Switch the data root to GEOS-S2S-3 on NAS once access comes through
+      (the February 2026 real-time chain already runs on GEOS-S2S-3: the
+      forecast file and the drift climatology both come from it)

@@ -172,8 +172,9 @@ as a 2D field). It differs from the hindcast processing in two respects:
 
 ```
 outputs/<level>hPa/<season>/<region>/lead<L>/<source>/forecast_indices.csv   hindcasts
-outputs/<label>/<level>hPa/<region>/forecast_indices.csv                    one live forecast
-outputs/<label>/<level>hPa/<region>/indices.png                             its summary figure
+outputs/<level>hPa/<season>/<region>/lead<L>/<source>/verification_REOF<n>.png  their verification figures
+outputs/<label>/<level>hPa/<region>/<baseline>/forecast_indices.csv         one live forecast
+outputs/<label>/<level>hPa/<region>/<baseline>/indices.png                  its summary figure
 ```
 
 Hindcasts are produced from two input sources, written to separate folders so
@@ -185,6 +186,13 @@ the unpredictable part, so the ensemble-mean indices are smoother and fewer;
 the per-member indices are noisier but show the spread between forecasts. The
 climatology grouping adapts to the source: per start date for `members`, per
 initialization month for `ensmean`.
+
+The verification figures (`03_verification_plot.py`) place each mode's
+pattern map above the forecast index and the historical GiOCEAN index over
+the hindcast years, with their correlation printed. The forecast curve is the
+average over everything verifying in a given month; the correlation runs over
+the months both records cover (the GiOCEAN seasonal index has no March, so
+lead-1 winter forecasts verify against January and February only).
 
 A hindcast row records the initialization date, the member, the verifying
 month, and the ten indices for that forecast. All values are in standard
