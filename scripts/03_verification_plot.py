@@ -38,7 +38,7 @@ SEASONS     = ["DJF", "JJA"]
 LEAD        = 1
 SOURCES     = ["members", "ensmean"]
 DOMAIN      = "20N_90N"
-N_PLOT      = 3          # how many leading modes to plot per case
+N_PLOT      = 10         # how many leading modes to plot per case
 
 # the GiOCEAN repository (for the observed indices, relative to the root of
 # this repository) and its patterns file (for the map panel; skipped where
