@@ -151,11 +151,13 @@ February 2026 ensemble mean, which arrives in the GiOCEAN-style pressure-level
 format, so the level is selected through the `lev` coordinate rather than read
 as a 2D field). It differs from the hindcast processing in two respects:
 
-- **Climatology.** No hindcast archive exists yet for this model version, so
-  the anomaly is taken against the GiOCEAN monthly mean for the verifying
-  month (`analysis.reanalysis_month_mean`). This ignores the model's drift.
-  A drift-corrected hindcast climatology should replace it when available, as
-  noted in the script header.
+- **Climatology.** The anomaly is taken against the GEOS-S2S-3 drift
+  climatology (2001-2020), one file per initialization month and verifying
+  month, which removes the model's drift with lead just as the per-init
+  climatology does for the hindcasts. The GiOCEAN monthly mean remains
+  available as an alternative baseline (the `BASELINE` setting); it was the
+  stopgap used before the drift files were identified, and it ignores the
+  drift. Each baseline writes to its own folder.
 - **Season matching.** Each lead verifies in a different month, so each lead
   is fitted against the pattern set for the season containing its verifying
   month (the `SEASON_OF` mapping: MAM patterns for a March map, and so on).

@@ -99,8 +99,9 @@ never saw, and the checks used to trust it.
 - [x] GEOS-S2S-2 tree located and inspected (grid matches GiOCEAN)
 - [x] Projection script (anomaly, weighting, least squares, scaling)
 - [x] Real-time script for a single forecast (the February 2026 case, in the
-      GiOCEAN-style pressure-level format; anomaly against the reanalysis
-      monthly mean until a drift-corrected climatology is settled)
+      GiOCEAN-style pressure-level format; anomaly against the GEOS-S2S-3
+      drift climatology, with the reanalysis monthly mean kept as an
+      alternative baseline)
 - [x] First run: 448 winter and 396 summer hindcasts indexed; the mean index
       is zero as required, and the 2009/10 negative NAO winter appears
       clearly, including the transition from positive to negative indices as
