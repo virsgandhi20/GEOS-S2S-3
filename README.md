@@ -74,6 +74,7 @@ python scripts/00_inspect_data.py            # look at the data
 python scripts/01_forecast_indices.py        # hindcast indices
 python scripts/02_realtime_indices.py        # one live forecast
 python scripts/03_verification_plot.py       # forecast vs observed figures
+python scripts/04_plume_s2s3.py              # GEOS-S2S-3 forecast plume (PFE)
 ```
 
 `01_forecast_indices.py` processes two input sources, each written to its own
@@ -92,6 +93,17 @@ CSV: the pattern map on top, and below it the forecast index (the average
 over everything verifying in a month, in black) against the historical
 GiOCEAN index (blue), with their correlation printed. At lead 1 the leading
 winter modes correlate at about 0.6.
+
+`04_plume_s2s3.py` is the GEOS-S2S-3 near-real-time step and runs on PFE
+(NAS), where that archive lives. For one initialization month it collects
+every member from every five-day start date (five members each, fifteen on
+the month's last start), computes each member's indices against the drift
+climatology, and draws one plume per mode: members as thin dashed lines,
+their average as a thick solid line, in the layout of the GMAO Nino 3.4
+plume plots. The index is computed by projection onto each standardized
+observed pattern (the `METHOD` setting; the simultaneous least-squares fit
+remains available as `"lstsq"`). The GiOCEAN pattern files have to be copied
+to PFE first, since they stay on the machine that produced them.
 
 ## More detail
 

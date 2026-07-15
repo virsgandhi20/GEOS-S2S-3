@@ -132,18 +132,35 @@ def area_weight(field):
     return field * np.sqrt(coslat)[:, np.newaxis]
 
 
-def fit_indices(weighted_anomaly, patterns):
-    """Fit one weighted anomaly map against the historical patterns by least
-    squares and put the result on the historical index scale.
+def fit_indices(weighted_anomaly, patterns, method="lstsq"):
+    """Turn one weighted anomaly map into an index per pattern, on the
+    historical scale. Two conventions:
 
-    Solves y = E b for b, where E holds the pattern loadings as columns and y
-    is the anomaly map, using only the points that are valid in both. b is then
-    centred and scaled with the historical index mean and spread saved in the
-    pattern file."""
+    "lstsq" solves y = E b for all patterns at once, where E holds the
+    pattern loadings as columns and y is the anomaly map, using only the
+    points valid in both. Each coefficient is the amount of that pattern
+    after accounting for the others; applied to a historical map this
+    reproduces the historical rotated index exactly. Scaled with the saved
+    index_mean / index_std.
+
+    "projection" projects y onto each unit-length pattern one at a time (the
+    per-pattern convention, as at CPC). Overlap between patterns is not
+    separated. Scaled with proj_mean / proj_std, the statistics of the same
+    projection applied to the historical maps, so forecast and observed
+    indices share a scale."""
     n_modes = patterns.sizes["mode"]
     E = patterns["loadings"].values.reshape(n_modes, -1).T   # (space, modes)
     y = np.asarray(weighted_anomaly.values, dtype=float).ravel()
     good = np.isfinite(y) & np.all(np.isfinite(E), axis=1)
+    if method == "projection":
+        if "proj_mean" not in patterns:
+            raise SystemExit(
+                "patterns.nc has no projection statistics; rerun the GiOCEAN "
+                "analysis (02_rotated_modes.py) to regenerate it")
+        unit = E[good] / np.linalg.norm(E[good], axis=0)
+        p = y[good] @ unit
+        return ((p - patterns["proj_mean"].values)
+                / patterns["proj_std"].values)
     b, *_ = np.linalg.lstsq(E[good], y[good], rcond=None)
     return ((b - patterns["index_mean"].values)
             / patterns["index_std"].values)
