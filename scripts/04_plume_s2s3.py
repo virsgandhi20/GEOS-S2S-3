@@ -107,14 +107,17 @@ def find_members():
 
 def drift_file(v_month):
     """The drift climatology for this initialization month and verifying
-    calendar month. The drift tree may or may not nest a month directory."""
+    calendar month, or None where it does not exist (the drift sets cover
+    nine months from the initialization, so the last target month of the
+    longest forecast can fall outside them). The drift tree may or may not
+    nest a month directory."""
     mon = analysis._MONTH_DIR[INIT_MONTH]
     name = f"{mon}.{COLLECTION}.monthly.drift.{v_month:02d}.nc4"
     for candidate in (os.path.join(DRIFT_ROOT, mon, name),
                       os.path.join(DRIFT_ROOT, name)):
         if os.path.exists(candidate):
             return candidate
-    raise SystemExit(f"drift file not found: {name} under {DRIFT_ROOT}")
+    return None
 
 
 def plume_plot(months, curves, mean, heading, out_png):
@@ -159,8 +162,13 @@ def main():
             if not os.path.exists(pattern_file):
                 print(f"  {tag}: no {season} patterns, skipping that month")
                 continue
+            drift_path = drift_file(v_month)
+            if drift_path is None:
+                print(f"  {tag}: no drift climatology for month "
+                      f"{v_month:02d}, skipping that month")
+                continue
             patterns = xr.open_dataset(pattern_file).load()
-            drift = analysis.read_field(drift_file(v_month), VARIABLE,
+            drift = analysis.read_field(drift_path, VARIABLE,
                                         patterns["lat"], patterns["lon"],
                                         level=level)
             month_setup[tag] = (patterns, drift, season)
