@@ -73,6 +73,13 @@ SEASON_OF   = {12: "DJF", 1: "DJF", 2: "DJF",
                9: "SON", 10: "SON", 11: "SON"}
 
 N_PLOT      = 10               # modes to draw a plume for
+
+# recent observed indices for the lead-in segment of the plume (written by
+# 05_observed_recent.py on Discover and committed, since the GiOCEAN data
+# does not exist on PFE). drawn where the file is present.
+OBSERVED    = os.path.join("..", "outputs", "observed_recent",
+                           "{level}hPa", "{domain}", "{method}",
+                           "observed_indices.csv")
 # ===========================================================================
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -120,19 +127,51 @@ def drift_file(v_month):
     return None
 
 
-def plume_plot(months, curves, mean, heading, out_png):
-    """Thin dashed line per member, thick solid line for their average."""
-    fig, ax = plt.subplots(figsize=(9, 5))
-    for values in curves:
-        ax.plot(months, values, "--", color="steelblue", linewidth=0.7,
-                alpha=0.6)
-    ax.plot(months, mean, "-", color="black", linewidth=2.5,
-            label=f"ensemble mean ({len(curves)} members)")
-    ax.axhline(0, color="limegreen", linewidth=0.8, linestyle=":")
-    ax.set_ylabel("index")
-    ax.set_xlabel("target month")
+def read_observed(level, mode):
+    """The recent observed indices for the lead-in segment, as
+    {YYYYMM: value}, or an empty dict where the file is absent."""
+    path = os.path.normpath(os.path.join(script_dir, OBSERVED.format(
+        level=int(level), domain=DOMAIN, method=METHOD)))
+    if not os.path.exists(path):
+        return {}
+    table = {}
+    with open(path, newline="") as handle:
+        reader = csv.reader(handle)
+        next(reader)
+        for row in reader:
+            table[row[0]] = float(row[2 + mode])
+    return table
+
+
+def plume_plot(months, groups, mean, observed, heading, out_png):
+    """The layout of the GMAO plume plots: the observed index as a solid
+    black lead-in, each start date's members dashed in one colour, and the
+    ensemble mean as a heavy red line with markers."""
+    obs_months = sorted(observed)
+    axis = ([f"{_MONTH[int(t[4:])]}\n{t[:4]}" for t in obs_months]
+            + list(months))
+    pad = [np.nan] * len(obs_months)
+
+    fig, ax = plt.subplots(figsize=(11, 6))
+    if obs_months:
+        ax.plot(axis[:len(obs_months)],
+                [observed[t] for t in obs_months],
+                "-", color="black", linewidth=2.5, label="GiOCEAN")
+    colors = plt.get_cmap("tab10")
+    for i, (init, curves) in enumerate(sorted(groups.items())):
+        label = f"{_MONTH[int(init[4:6])].lower()}{init[6:]}"
+        for j, values in enumerate(curves):
+            ax.plot(axis, pad + list(values), "--", color=colors(i % 10),
+                    linewidth=0.9, label=label if j == 0 else None)
+    ax.plot(axis, pad + list(mean), "o-", color="red", linewidth=2.5,
+            label="Ensmean")
+    ax.axhline(0, color="grey", linewidth=0.5)
+    ax.set_ylim(-3, 3)
+    ax.set_ylabel("index (standard deviations)")
+    ax.set_xlabel("Forecast Month")
     ax.set_title(heading)
-    ax.legend()
+    ax.legend(loc="upper left", fontsize=8)
+    ax.grid(linewidth=0.3, alpha=0.5)
     os.makedirs(os.path.dirname(out_png), exist_ok=True)
     fig.savefig(out_png, dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -208,17 +247,21 @@ def main():
 
         months_axis = [tag for tag in tags if tag in month_setup]
         month_names = [f"{_MONTH[int(t[4:])]}\n{t[:4]}" for t in months_axis]
+        r_year, r_month = analysis.verifying_month(INIT_YEAR, INIT_MONTH, 1)
         for mode in range(min(N_PLOT, n_modes)):
-            curves = []
+            groups, everything = {}, []
             for key in sorted(indexed):
-                curves.append([indexed[key][t][mode]
-                               if t in indexed[key] else np.nan
-                               for t in months_axis])
-            mean = np.nanmean(np.array(curves, dtype=float), axis=0)
+                curve = [indexed[key][t][mode]
+                         if t in indexed[key] else np.nan
+                         for t in months_axis]
+                groups.setdefault(key[0], []).append(curve)
+                everything.append(curve)
+            mean = np.nanmean(np.array(everything, dtype=float), axis=0)
             plume_plot(
-                month_names, curves, mean,
-                f"REOF{mode+1} {VARIABLE} ({int(level)}hPa), "
-                f"{_MONTH[INIT_MONTH]} {INIT_YEAR} starts ({METHOD})",
+                month_names, groups, mean, read_observed(level, mode),
+                f"REOF{mode+1} {VARIABLE} ({int(level)}hPa): "
+                f"{r_year} {_MONTH[r_month].lower()} released forecast "
+                f"({METHOD})",
                 os.path.join(out, f"plume_REOF{mode+1}.png"))
 
         for setup in month_setup.values():
