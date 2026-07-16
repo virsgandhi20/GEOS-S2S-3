@@ -144,10 +144,9 @@ def read_observed(level, mode):
 
 
 def plume_plot(months, groups, mean, observed, heading, out_png):
-    """The layout of the GMAO plume plots, decluttered for a 45-member
-    ensemble: the observed index as a solid black lead-in, every member as a
-    faint grey line, each start date's average as one coloured dashed line,
-    and the full ensemble mean as a heavy red line with markers."""
+    """The layout of the GMAO plume plots: the observed index as a solid
+    black lead-in, each start date's members dashed in one colour, and the
+    ensemble mean as a heavy red line with markers."""
     obs_months = sorted(observed)
     axis = ([f"{_MONTH[int(t[4:])]}\n{t[:4]}" for t in obs_months]
             + list(months))
@@ -158,17 +157,13 @@ def plume_plot(months, groups, mean, observed, heading, out_png):
         ax.plot(axis[:len(obs_months)],
                 [observed[t] for t in obs_months],
                 "-", color="black", linewidth=2.5, label="GiOCEAN")
-    for curves in groups.values():
-        for values in curves:
-            ax.plot(axis, pad + list(values), "-", color="0.75",
-                    linewidth=0.6, alpha=0.7)
     colors = plt.get_cmap("tab10")
     for i, (init, curves) in enumerate(sorted(groups.items())):
         label = f"{_MONTH[int(init[4:6])].lower()}{init[6:]}"
-        date_mean = np.nanmean(np.array(curves, dtype=float), axis=0)
-        ax.plot(axis, pad + list(date_mean), "--", color=colors(i % 10),
-                linewidth=1.6, label=label)
-    ax.plot(axis, pad + list(mean), "o-", color="red", linewidth=2.8,
+        for j, values in enumerate(curves):
+            ax.plot(axis, pad + list(values), "--", color=colors(i % 10),
+                    linewidth=0.9, label=label if j == 0 else None)
+    ax.plot(axis, pad + list(mean), "o-", color="red", linewidth=2.5,
             label="Ensmean")
     ax.axhline(0, color="grey", linewidth=0.5)
     ax.set_ylim(-3, 3)
