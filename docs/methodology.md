@@ -11,29 +11,41 @@ The GiOCEAN analysis identifies the recurring patterns of Northern Hemisphere
 height variability (the North Atlantic Oscillation, the Pacific/North American
 pattern, and so on) and saves them as data (`patterns.nc`). This repository
 does not derive any new patterns. Each forecast height map is instead measured
-against the saved patterns: a least-squares fit determines how much of each
-pattern is present in the map. The result is one number per pattern per
-forecast, a teleconnection index, on the same scale as the historical record.
-A complicated forecast map is thereby reduced to a short set of interpretable
+against the saved patterns: a regression determines how much of each pattern
+is present in the map. The result is one number per pattern per forecast, a
+teleconnection index, on the same scale as the historical record. A
+complicated forecast map is thereby reduced to a short set of interpretable
 quantities, such as a positive NAO phase and a negative PNA phase, which can be
 compared directly with observations and with the historical indices.
 
-## The dataset and its consequences for the code
+The target system is GEOS-S2S-3, and the main product is a forecast plume per
+mode from its near-real-time ensemble. The method was developed and verified
+on the GEOS-S2S-2 hindcast archive, whose decades of past forecasts allow the
+forecast indices to be checked against the observed record; that verification
+is what supports the real-time products.
 
-GEOS-S2S is a forecast system, and its archive is organised accordingly:
+## The datasets and their consequences for the code
 
-- A new forecast is initialized every five days. Under `runx/<year>/` the
-  initialization dates appear as directories such as `dec02`, `dec07`, `feb10`.
-- Lead month 1 is the month after the initialization month: a February start
-  verifies March at lead 1, April at lead 2, and so on out to roughly nine
-  months, with one monthly file per lead.
-- Each initialization carries ensemble members (`ens1`, `ens2`, ...). The
-  numbering varies between initializations, so `find_forecasts` discovers the
-  members by glob rather than assuming a fixed set.
-- The height fields `H500` and `H250` are provided directly in the
-  `geosgcm_vis2d` collection, in metres, on the same half-degree grid as
-  GiOCEAN. The fit therefore requires no regridding; `read_field` falls back
-  to interpolation should a future dataset differ.
+GEOS-S2S is a forecast system: a new forecast is initialized every five days,
+lead month 1 is the month after the initialization month, and each run
+carries up to about nine lead months, one monthly file per lead.
+
+The GEOS-S2S-3 near-real-time archive (PFE) keeps one directory per start
+date with five ensemble members each; a subset of members, including several
+on the month's final start date (which carries fifteen), extends to nine
+lead months while the rest stop at three. The height field `H` sits on
+pressure levels, and the drift climatology (2001-2020) provides one baseline
+file per initialization month and verifying month.
+
+The GEOS-S2S-2 hindcast archive (Discover) keeps initializations from 1981
+under `runx/<year>/` as directories such as `dec02`, `dec07`, `feb10`, with
+member numbering that varies between initializations (`find_forecasts`
+discovers the members by glob rather than assuming a fixed set). The height
+fields `H500` and `H250` come ready-made in the `geosgcm_vis2d` collection.
+
+Both systems use the same half-degree grid as GiOCEAN, so the fit requires
+no regridding; `read_field` falls back to interpolation should a dataset
+differ.
 
 One property of forecast models shapes the anomaly step: drift. A model drifts
 away from reality as the lead grows, so its typical lead-1 January differs
@@ -42,10 +54,12 @@ climate. Anomalies must therefore be taken against the model's own behaviour
 at the same initialization date and lead; otherwise the drift enters the
 indices as a spurious signal.
 
-## The hindcast calculation
+## The index calculation, developed on the hindcasts
 
-Implemented by `01_forecast_indices.py`, one case at a time (a level, a set of
-initialization months, a lead, a region). Let `F(d, y)` denote the forecast
+Implemented by `01_forecast_indices.py` on the GEOS-S2S-2 hindcasts, one case
+at a time (a level, a set of initialization months, a lead, a region); the
+same chain, with the drift climatology as the baseline, runs inside the
+GEOS-S2S-3 products. Let `F(d, y)` denote the forecast
 height map initialized on date `d` (for example `dec27`) of year `y`, at the
 fixed lead.
 
@@ -260,11 +274,13 @@ accumulate side by side rather than overwriting one another.
 ## Reproducing
 
 ```bash
-module load python/GEOSpyD
-python scripts/00_inspect_data.py        # survey the archive
-python scripts/01_forecast_indices.py    # hindcast indices
-python scripts/02_realtime_indices.py    # the live forecast
+python scripts/04_plume_s2s3.py          # the forecast plume (PFE)
+python scripts/05_observed_recent.py     # its observed lead-in (Discover)
+python scripts/02_realtime_indices.py    # one single forecast (Discover)
+python scripts/01_forecast_indices.py    # GEOS-S2S-2 hindcast indices (Discover)
+python scripts/03_verification_plot.py   # their verification figures (Discover)
 ```
 
 The GiOCEAN repository must have been run with the regression display first,
-since that step writes `patterns.nc`.
+since that step writes `patterns.nc`; running on PFE requires a copy of the
+pattern files, which stay on the machine that produced them.
