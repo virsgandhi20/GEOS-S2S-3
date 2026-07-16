@@ -19,10 +19,12 @@ run carries about nine lead months. The conventions used here:
 - picking a season at a fixed lead shifts the verifying months (initializations
   in D, J, F at lead 1 verify in J, F, M)
 
-The target dataset, GEOS-S2S-3, resides on NAS, to which access is pending.
-Its close relative, GEOS-S2S-2, is available on Discover. The code is built
-against the Discover copy, with the data root kept as a setting so that
-switching to the NAS dataset later is a one-line change.
+The target dataset is GEOS-S2S-3. Its near-real-time forecasts and drift
+climatology live on PFE (NAS) and feed the real-time products (the plume and
+the single-forecast script). Its close relative, GEOS-S2S-2, is available on
+Discover and was used to build and verify the hindcast side; the data roots
+are settings, so the hindcast scripts point at a GEOS-S2S-3 hindcast archive
+whenever one becomes reachable.
 
 ## The method
 
@@ -32,10 +34,14 @@ switching to the NAS dataset later is a one-line change.
    same initialization month and lead. Forecast models drift with lead time, so
    the climatology has to be lead-dependent.
 3. Apply the same `sqrt(cos(latitude))` weighting the patterns were found with.
-4. Fit the weighted anomaly against the patterns by least squares
-   (`y = E b + error`, solving for `b`), one fit per forecast map.
-5. Scale `b` by the historical index spread so the forecast indices sit on the
-   same normalized scale as the historical ones.
+4. Compute the index against the observed patterns. The default projects
+   the weighted anomaly onto each standardized pattern one at a time (the
+   group's convention); a simultaneous least-squares fit against all
+   patterns (`y = E b + error`) remains available as an option, and each
+   convention writes to its own folder.
+5. Scale by the statistics of the same computation applied to the historical
+   record, so the forecast indices sit on the same normalized scale as the
+   historical ones.
 
 If the forecast grid differs from the GiOCEAN grid, the forecast is
 interpolated onto the pattern grid before the fit.

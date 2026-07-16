@@ -9,8 +9,8 @@ saved by the GiOCEAN analysis. The result is one index per mode per forecast.
 Two input sources are supported, each written to its own folder so the results
 sit side by side:
 
-    outputs/500hPa/DJF/20N_90N/lead1/members/forecast_indices.csv
-    outputs/500hPa/DJF/20N_90N/lead1/ensmean/forecast_indices.csv
+    outputs/500hPa/DJF/20N_90N/lead1/members/projection/forecast_indices.csv
+    outputs/500hPa/DJF/20N_90N/lead1/ensmean/projection/forecast_indices.csv
 
 "members" processes the individual forecasts (every five-day start date, one
 row per member); "ensmean" processes the pre-averaged product, one forecast per
@@ -46,6 +46,11 @@ SOURCES     = ["members", "ensmean"]
 # which ensemble members (the "members" source): "*" for all found, "1" for ens1
 MEMBERS     = "1"
 
+# how each index is computed: "projection" (each map onto one standardized
+# observed pattern at a time, the group's convention) or "lstsq" (all
+# patterns fitted at once). each writes to its own folder.
+METHOD      = "projection"
+
 # an initialization needs at least this many years to define a climatology
 # (the ensmean tree has stray single-year entries, e.g. jul 1991 only)
 MIN_CLIM_YEARS = 10
@@ -68,7 +73,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 def out_path(level, season, lead, source):
     return os.path.normpath(os.path.join(
         script_dir, "..", "outputs", f"{int(level)}hPa", season, DOMAIN,
-        f"lead{lead}", source, "forecast_indices.csv"))
+        f"lead{lead}", source, METHOD, "forecast_indices.csv"))
 
 
 def main():
@@ -132,7 +137,8 @@ def main():
                     for record in records:
                         anomaly = analysis.area_weight(
                             record["field"] - climatology[record["init"]])
-                        indices = analysis.fit_indices(anomaly, patterns)
+                        indices = analysis.fit_indices(anomaly, patterns,
+                                                       method=METHOD)
                         rows.append([f"{record['year']}-{record['init']}",
                                      record["member"], record["verifying"]]
                                     + list(indices))

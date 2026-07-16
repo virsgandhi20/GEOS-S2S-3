@@ -17,8 +17,8 @@ folder:
 
 Writes a CSV (one row per lead) and a small figure of the leading indices:
 
-    outputs/2026feb/500hPa/20N_90N/drift/forecast_indices.csv
-    outputs/2026feb/500hPa/20N_90N/drift/indices.png
+    outputs/2026feb/500hPa/20N_90N/drift/projection/forecast_indices.csv
+    outputs/2026feb/500hPa/20N_90N/drift/projection/indices.png
 
 To run (on Discover):
     module load python/GEOSpyD
@@ -59,6 +59,10 @@ SEASON_OF    = {12: "DJF", 1: "DJF", 2: "DJF",
 # "giocean" (the reanalysis monthly mean, the earlier stopgap)
 BASELINE     = "drift"
 
+# how each index is computed: "projection" (the group's convention) or
+# "lstsq"; each writes to its own folder
+METHOD       = "projection"
+
 # the drift climatology: <init mon>/<init mon>.<collection>.monthly.drift.<verifying MM>.nc4
 DRIFT_DIR    = "/gpfsm/dnb07/projects/p236/GEOSS2S3/GEOS_fcst/data/DRFT/DRFT_2001_2020/atm_inst_6hr_glo_L720x361_p49"
 DRIFT_COLLECTION = "atm_inst_6hr_glo_L720x361_p49"
@@ -78,7 +82,7 @@ _MONTH = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 def out_dir(level):
     return os.path.normpath(os.path.join(
         script_dir, "..", "outputs", LABEL, f"{int(level)}hPa", DOMAIN,
-        BASELINE))
+        BASELINE, METHOD))
 
 
 def drift_file(v_month):
@@ -123,7 +127,8 @@ def main():
                     lat, lon)
             forecast = analysis.read_field(path, VARIABLE, lat, lon, level=level)
             anomaly = analysis.area_weight(forecast - baseline)
-            indices = analysis.fit_indices(anomaly, patterns)
+            indices = analysis.fit_indices(anomaly, patterns,
+                                           method=METHOD)
             n_modes = patterns.sizes["mode"]
             patterns.close()
 

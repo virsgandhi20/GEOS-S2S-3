@@ -16,7 +16,7 @@ are drawn on their own.
 
 Outputs, alongside the forecast CSVs:
 
-    outputs/500hPa/DJF/20N_90N/lead1/members/verification_REOF1.png ...
+    outputs/500hPa/DJF/20N_90N/lead1/members/projection/verification_REOF1.png ...
 
 To run (on Discover):
     module load python/GEOSpyD
@@ -38,6 +38,13 @@ SEASONS     = ["DJF", "JJA"]
 LEAD        = 1
 SOURCES     = ["members", "ensmean"]
 DOMAIN      = "20N_90N"
+
+# the index convention to verify: "projection" (the group's convention) or
+# "lstsq". the observed indices are read in the same convention, so both
+# sides of the comparison are computed the same way.
+METHOD      = "projection"
+_INDEX_FILE = {"projection": "projection_indices.csv",
+               "lstsq": "teleconnection_indices.csv"}
 N_PLOT      = 10         # how many leading modes to plot per case
 
 # the GiOCEAN repository (for the observed indices, relative to the root of
@@ -45,7 +52,7 @@ N_PLOT      = 10         # how many leading modes to plot per case
 # the file is absent)
 GIOCEAN_INDICES = os.path.join(
     "..", "GiOCEAN", "outputs", "{level}hPa", "{season}", DOMAIN,
-    "regression", "teleconnection_indices.csv")
+    "regression", "{index_file}")
 PATTERNS = "/discover/nobackup/vgandhi2/GiOCEAN/outputs/{level}hPa/{season}/{domain}/regression/patterns.nc"
 # ===========================================================================
 
@@ -55,7 +62,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 def forecast_csv(level, season, source):
     return os.path.normpath(os.path.join(
         script_dir, "..", "outputs", f"{level}hPa", season, DOMAIN,
-        f"lead{LEAD}", source, "forecast_indices.csv"))
+        f"lead{LEAD}", source, METHOD, "forecast_indices.csv"))
 
 
 def read_forecast(path):
@@ -171,7 +178,8 @@ def main():
         for season in SEASONS:
             observed = read_observed(os.path.normpath(os.path.join(
                 script_dir, "..",
-                GIOCEAN_INDICES.format(level=level, season=season))))
+                GIOCEAN_INDICES.format(level=level, season=season,
+                                       index_file=_INDEX_FILE[METHOD]))))
             for source in SOURCES:
                 path = forecast_csv(level, season, source)
                 if not os.path.exists(path):

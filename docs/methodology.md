@@ -212,10 +212,10 @@ there; curves should be read within a season.
 ## Outputs
 
 ```
-outputs/<level>hPa/<season>/<region>/lead<L>/<source>/forecast_indices.csv   hindcasts
-outputs/<level>hPa/<season>/<region>/lead<L>/<source>/verification_REOF<n>.png  their verification figures
-outputs/<label>/<level>hPa/<region>/<baseline>/forecast_indices.csv         one live forecast
-outputs/<label>/<level>hPa/<region>/<baseline>/indices.png                  its summary figure
+outputs/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/forecast_indices.csv   hindcasts
+outputs/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/verification_REOF<n>.png  their verification figures
+outputs/<label>/<level>hPa/<region>/<baseline>/<method>/forecast_indices.csv  one live forecast
+outputs/<label>/<level>hPa/<region>/<baseline>/<method>/indices.png           its summary figure
 outputs/plumes/<label>/<level>hPa/<region>/<method>/plume_REOF<n>.png       the forecast plumes
 outputs/observed_recent/<level>hPa/<region>/<method>/observed_indices.csv   the plume's observed lead-in
 ```
