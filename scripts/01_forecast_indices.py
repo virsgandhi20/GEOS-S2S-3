@@ -9,8 +9,8 @@ saved by the GiOCEAN analysis. The result is one index per mode per forecast.
 Two input sources are supported, each written to its own folder so the results
 sit side by side:
 
-    outputs/500hPa/DJF/20N_90N/lead1/members/projection/forecast_indices.csv
-    outputs/500hPa/DJF/20N_90N/lead1/ensmean/projection/forecast_indices.csv
+    outputs/hindcasts/500hPa/DJF/20N_90N/lead1/members/projection/forecast_indices.csv
+    outputs/hindcasts/500hPa/DJF/20N_90N/lead1/ensmean/projection/forecast_indices.csv
 
 "members" processes the individual forecasts (every five-day start date, one
 row per member); "ensmean" processes the pre-averaged product, one forecast per
@@ -72,7 +72,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def out_path(level, season, lead, source):
     return os.path.normpath(os.path.join(
-        script_dir, "..", "outputs", f"{int(level)}hPa", season, DOMAIN,
+        script_dir, "..", "outputs", "hindcasts", f"{int(level)}hPa",
+        season, DOMAIN,
         f"lead{lead}", source, METHOD, "forecast_indices.csv"))
 
 

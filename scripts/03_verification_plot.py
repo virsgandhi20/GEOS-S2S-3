@@ -16,7 +16,7 @@ are drawn on their own.
 
 Outputs, alongside the forecast CSVs:
 
-    outputs/500hPa/DJF/20N_90N/lead1/members/projection/verification_REOF1.png ...
+    outputs/hindcasts/500hPa/DJF/20N_90N/lead1/members/projection/verification_REOF1.png ...
 
 To run (on Discover):
     module load python/GEOSpyD
@@ -61,7 +61,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def forecast_csv(level, season, source):
     return os.path.normpath(os.path.join(
-        script_dir, "..", "outputs", f"{level}hPa", season, DOMAIN,
+        script_dir, "..", "outputs", "hindcasts", f"{level}hPa", season,
+        DOMAIN,
         f"lead{LEAD}", source, METHOD, "forecast_indices.csv"))
 
 

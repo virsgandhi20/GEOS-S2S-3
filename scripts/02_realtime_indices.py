@@ -17,8 +17,8 @@ folder:
 
 Writes a CSV (one row per lead) and a small figure of the leading indices:
 
-    outputs/2026feb/500hPa/20N_90N/drift/projection/forecast_indices.csv
-    outputs/2026feb/500hPa/20N_90N/drift/projection/indices.png
+    outputs/realtime/2026feb/500hPa/20N_90N/drift/projection/forecast_indices.csv
+    outputs/realtime/2026feb/500hPa/20N_90N/drift/projection/indices.png
 
 To run (on Discover):
     module load python/GEOSpyD
@@ -81,7 +81,8 @@ _MONTH = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 def out_dir(level):
     return os.path.normpath(os.path.join(
-        script_dir, "..", "outputs", LABEL, f"{int(level)}hPa", DOMAIN,
+        script_dir, "..", "outputs", "realtime", LABEL,
+        f"{int(level)}hPa", DOMAIN,
         BASELINE, METHOD))
 
 

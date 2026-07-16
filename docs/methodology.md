@@ -226,12 +226,11 @@ there; curves should be read within a season.
 ## Outputs
 
 ```
-outputs/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/forecast_indices.csv   hindcasts
-outputs/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/verification_REOF<n>.png  their verification figures
-outputs/<label>/<level>hPa/<region>/<baseline>/<method>/forecast_indices.csv  one live forecast
-outputs/<label>/<level>hPa/<region>/<baseline>/<method>/indices.png           its summary figure
-outputs/plumes/<label>/<level>hPa/<region>/<method>/plume_REOF<n>.png       the forecast plumes
-outputs/observed_recent/<level>hPa/<region>/<method>/observed_indices.csv   the plume's observed lead-in
+outputs/plumes/<label>/<level>hPa/<region>/<method>/            the forecast plumes and their CSV
+outputs/observed_recent/<level>hPa/<region>/<method>/            the plumes' observed lead-in
+outputs/realtime/<label>/<level>hPa/<region>/<baseline>/<method>/  one single forecast
+outputs/hindcasts/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/  the GEOS-S2S-2 hindcast
+                                                                 indices and verification figures
 ```
 
 Hindcasts are produced from two input sources, written to separate folders so

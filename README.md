@@ -73,7 +73,11 @@ interpolated onto the pattern grid before the fit.
 ```
 scripts/     the code
 data/        empty (the data lives on PFE / Discover)
-outputs/     forecast indices and figures
+outputs/
+  plumes/            the forecast plumes, one folder per initialization month
+  observed_recent/   the plumes' observed lead-in
+  realtime/          single forecasts, one folder per case
+  hindcasts/         the GEOS-S2S-2 indices and verification figures
 docs/        notes
 ```
 
@@ -113,8 +117,8 @@ observed lead-in from (committed, so it travels to PFE through git).
 ensemble-mean files (the February 2026 case), with a choice of anomaly
 baseline (the drift climatology, or the reanalysis monthly mean).
 
-`01_forecast_indices.py` processes the GEOS-S2S-2 hindcasts from two input
-sources, each written to its own folder: "members" reads the individual
+`01_forecast_indices.py` processes the GEOS-S2S-2 hindcasts into
+`outputs/hindcasts/`, from two input sources, each written to its own folder: "members" reads the individual
 forecasts, one per five-day start date, and "ensmean" reads the archive's
 pre-averaged product. The anomaly is taken against the mean over years for
 the same initialization and lead. `03_verification_plot.py` then draws one
