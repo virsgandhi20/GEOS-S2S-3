@@ -10,10 +10,10 @@ Two input sources are supported, each written to its own folder so the results
 sit side by side:
 
     outputs/hindcasts/500hPa/DJF/20N_90N/lead1/members/projection/forecast_indices.csv
-    outputs/hindcasts/500hPa/DJF/20N_90N/lead1/ensmean/projection/forecast_indices.csv
+    outputs/hindcasts/500hPa/DJF/20N_90N/lead1/ensemble_mean/projection/forecast_indices.csv
 
 "members" processes the individual forecasts (every five-day start date, one
-row per member); "ensmean" processes the pre-averaged product, one forecast per
+row per member); "ensemble_mean" processes the pre-averaged product, one forecast per
 initialization month, where the averaging over start dates and members has
 already been done. Settings are at the top; the machinery lives in analysis.py.
 
@@ -40,15 +40,16 @@ LEADS       = [1]              # lead months to process, e.g. [1, 2, 3]
 
 # forecast inputs to process, each written to its own folder:
 #   "members" - individual forecasts, every five-day start date
-#   "ensmean" - the pre-averaged product, one forecast per initialization month
-SOURCES     = ["members", "ensmean"]
+#   "ensemble_mean" - the pre-averaged product, one forecast per
+#                     initialization month
+SOURCES     = ["members", "ensemble_mean"]
 
 # which ensemble members (the "members" source): "*" for all found, "1" for ens1
 MEMBERS     = "1"
 
 # how each index is computed: "projection" (each map onto one standardized
-# observed pattern at a time, the group's convention) or "lstsq" (all
-# patterns fitted at once). each writes to its own folder.
+# observed pattern at a time, the group's convention) or "least_squares"
+# (all patterns fitted at once). each writes to its own folder.
 METHOD      = "projection"
 
 # an initialization needs at least this many years to define a climatology
@@ -92,7 +93,7 @@ def main():
                 for source in SOURCES:
                     print(f"\n=== {variable}  {season} inits  lead {lead}  "
                           f"{source}  ({YEAR_START}-{YEAR_END}) ===")
-                    if source == "ensmean":
+                    if source == "ensemble_mean":
                         records = analysis.find_ensemble_mean(
                             ENSMEAN_ROOT, years, months, lead,
                             collection=COLLECTION)

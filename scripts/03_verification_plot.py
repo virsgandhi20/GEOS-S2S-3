@@ -5,7 +5,7 @@ dashed) over the hindcast years, with their correlation printed on the panel.
 
 The forecast curve is the average over everything verifying in a given month
 (all start dates and members for the "members" source; the archive has already
-averaged for "ensmean"), so it plays the role of the ensemble-average curve in
+averaged for "ensemble_mean"), so it plays the role of the ensemble-average curve in
 the group's ENSO verification plots. The observed curve is the GiOCEAN rotated
 index for the same verifying months. Only in-season months exist, so the
 curves break between years.
@@ -36,15 +36,15 @@ import matplotlib.pyplot as plt
 LEVELS      = [500, 250]
 SEASONS     = ["DJF", "JJA"]
 LEAD        = 1
-SOURCES     = ["members", "ensmean"]
+SOURCES     = ["members", "ensemble_mean"]
 DOMAIN      = "20N_90N"
 
 # the index convention to verify: "projection" (the group's convention) or
-# "lstsq". the observed indices are read in the same convention, so both
+# "least_squares". the observed indices are read in the same convention, so both
 # sides of the comparison are computed the same way.
 METHOD      = "projection"
 _INDEX_FILE = {"projection": "projection_indices.csv",
-               "lstsq": "teleconnection_indices.csv"}
+               "least_squares": "teleconnection_indices.csv"}
 N_PLOT      = 10         # how many leading modes to plot per case
 
 # the GiOCEAN repository (for the observed indices, relative to the root of

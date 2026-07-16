@@ -13,8 +13,8 @@ members from all start dates in the month go into one plume.
 The chain per member and lead: anomaly against the drift climatology for the
 same initialization month and verifying month, the usual latitude weighting,
 then the index by projection onto each standardized observed pattern
-(METHOD = "projection", the per-pattern convention; "lstsq" gives the
-simultaneous fit instead). Each lead is measured against the pattern set of
+(METHOD = "projection", the per-pattern convention; "least_squares" gives
+the simultaneous fit instead). Each lead is measured against the pattern set of
 the season its verifying month falls in, so plume curves should be read
 within a season.
 
@@ -60,7 +60,7 @@ LEVELS      = [500, 250]
 DOMAIN      = "20N_90N"
 
 # how each index is computed: "projection" (each map onto one standardized
-# observed pattern at a time) or "lstsq" (all patterns fitted at once)
+# observed pattern at a time) or "least_squares" (all patterns fitted at once)
 METHOD      = "projection"
 
 # historical patterns (written by the GiOCEAN repository). patterns.nc lives

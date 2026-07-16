@@ -119,7 +119,7 @@ baseline (the drift climatology, or the reanalysis monthly mean).
 
 `01_forecast_indices.py` processes the GEOS-S2S-2 hindcasts into
 `outputs/hindcasts/`, from two input sources, each written to its own folder: "members" reads the individual
-forecasts, one per five-day start date, and "ensmean" reads the archive's
+forecasts, one per five-day start date, and "ensemble_mean" reads the archive's
 pre-averaged product. The anomaly is taken against the mean over years for
 the same initialization and lead. `03_verification_plot.py` then draws one
 figure per mode: the pattern map on top, and the forecast index against the

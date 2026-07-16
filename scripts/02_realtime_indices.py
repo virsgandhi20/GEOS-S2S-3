@@ -9,16 +9,18 @@ index spread.
 
 Two baselines are available (the BASELINE setting), each written to its own
 folder:
-  "drift"   - the GEOS-S2S-3 drift climatology (2001-2020), one file per
-              initialization month and verifying month, which removes the
-              model's drift with lead. This is the proper baseline.
-  "giocean" - the GiOCEAN monthly climatology, the stopgap used before the
-              drift files were identified; it ignores the drift.
+  "drift_corrected"     - the GEOS-S2S-3 drift climatology (2001-2020),
+                          one file per initialization month and verifying
+                          month, which removes the model's drift with lead.
+                          This is the proper baseline.
+  "reanalysis_baseline" - the GiOCEAN monthly climatology, the stopgap used
+                          before the drift files were identified; it ignores
+                          the drift.
 
 Writes a CSV (one row per lead) and a small figure of the leading indices:
 
-    outputs/realtime/2026feb/500hPa/20N_90N/drift/projection/forecast_indices.csv
-    outputs/realtime/2026feb/500hPa/20N_90N/drift/projection/indices.png
+    outputs/realtime/2026feb/500hPa/20N_90N/drift_corrected/projection/forecast_indices.csv
+    outputs/realtime/2026feb/500hPa/20N_90N/drift_corrected/projection/indices.png
 
 To run (on Discover):
     module load python/GEOSpyD
@@ -55,12 +57,13 @@ SEASON_OF    = {12: "DJF", 1: "DJF", 2: "DJF",
                 6: "JJA", 7: "JJA", 8: "JJA",
                 9: "SON", 10: "SON", 11: "SON"}
 
-# the anomaly baseline: "drift" (the GEOS-S2S-3 drift climatology) or
-# "giocean" (the reanalysis monthly mean, the earlier stopgap)
-BASELINE     = "drift"
+# the anomaly baseline: "drift_corrected" (the GEOS-S2S-3 drift
+# climatology) or "reanalysis_baseline" (the reanalysis monthly mean, the
+# earlier stopgap)
+BASELINE     = "drift_corrected"
 
 # how each index is computed: "projection" (the group's convention) or
-# "lstsq"; each writes to its own folder
+# "least_squares"; each writes to its own folder
 METHOD       = "projection"
 
 # the drift climatology: <init mon>/<init mon>.<collection>.monthly.drift.<verifying MM>.nc4
@@ -119,7 +122,7 @@ def main():
 
             patterns = xr.open_dataset(pattern_file)
             lat, lon = patterns["lat"], patterns["lon"]
-            if BASELINE == "drift":
+            if BASELINE == "drift_corrected":
                 baseline = analysis.read_field(
                     drift_file(v_month), VARIABLE, lat, lon, level=level)
             else:

@@ -130,7 +130,8 @@ patterns. The two conventions coincide for orthogonal patterns and differ
 mildly for rotated ones; the projection is the convention used by CPC and by
 the group's earlier forecast work, so the forecast indices become directly
 comparable with those. The `method` argument of `fit_indices` selects
-between them ("lstsq" and "projection"), and each writes to its own folder.
+between them ("least_squares" and "projection"), and each writes to its own
+folder.
 
 ### 5. Scaling to the historical record
 
@@ -235,13 +236,13 @@ outputs/hindcasts/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/  the G
 
 Hindcasts are produced from two input sources, written to separate folders so
 the results can be compared: `members` processes the individual forecasts (one
-per five-day start date, one row per member), while `ensmean` processes the
+per five-day start date, one row per member), while `ensemble_mean` processes the
 archive's pre-averaged product, one forecast per initialization month.
 Averaging over members retains the predictable part of a forecast and damps
 the unpredictable part, so the ensemble-mean indices are smoother and fewer;
 the per-member indices are noisier but show the spread between forecasts. The
 climatology grouping adapts to the source: per start date for `members`, per
-initialization month for `ensmean`.
+initialization month for `ensemble_mean`.
 
 The verification figures (`03_verification_plot.py`) place each mode's
 pattern map above the forecast index and the historical GiOCEAN index over

@@ -132,11 +132,11 @@ def area_weight(field):
     return field * np.sqrt(coslat)[:, np.newaxis]
 
 
-def fit_indices(weighted_anomaly, patterns, method="lstsq"):
+def fit_indices(weighted_anomaly, patterns, method="least_squares"):
     """Turn one weighted anomaly map into an index per pattern, on the
     historical scale. Two conventions:
 
-    "lstsq" solves y = E b for all patterns at once, where E holds the
+    "least_squares" solves y = E b for all patterns at once, where E holds the
     pattern loadings as columns and y is the anomaly map, using only the
     points valid in both. Each coefficient is the amount of that pattern
     after accounting for the others; applied to a historical map this
