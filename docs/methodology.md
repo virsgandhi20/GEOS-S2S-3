@@ -106,6 +106,18 @@ because the rotated patterns are not exactly orthogonal on the masked region;
 the simultaneous fit is a multiple regression rather than ten independent
 projections, and it accounts for the overlap between patterns.
 
+### 4b. The projection index (the per-pattern convention)
+
+An alternative to the simultaneous fit is used for the real-time products:
+the weighted anomaly is projected onto each pattern one at a time, with the
+pattern normalized to unit length. The result measures how much the map
+resembles that single pattern, without separating the overlap between
+patterns. The two conventions coincide for orthogonal patterns and differ
+mildly for rotated ones; the projection is the convention used by CPC and by
+the group's earlier forecast work, so the forecast indices become directly
+comparable with those. The `method` argument of `fit_indices` selects
+between them ("lstsq" and "projection"), and each writes to its own folder.
+
 ### 5. Scaling to the historical record
 
 `patterns.nc` also carries the mean and standard deviation of each historical
@@ -114,6 +126,11 @@ index. The final index is
 ```
 I_j = (b_j - mean_j) / std_j
 ```
+
+The projection index is scaled the same way, with the mean and spread of the
+same projection applied to the historical maps (`proj_mean` and `proj_std`
+in the pattern file), so both conventions place forecast and observation on
+one scale.
 
 This places every forecast on the historical scale: an index of -1.7 in a 2009
 forecast has the same meaning as -1.7 in the GiOCEAN record, namely 1.7
@@ -168,6 +185,30 @@ as a 2D field). It differs from the hindcast processing in two respects:
   forecast itself. The `patterns` column in the CSV records the set used for
   each row.
 
+## The forecast plume
+
+`04_plume_s2s3.py` processes one initialization month of the GEOS-S2S-3
+near-real-time archive on PFE. That archive holds an initialization every
+five days, each carrying five ensemble members; a subset of members
+(including several on the month's final start date, which carries fifteen)
+extends to nine lead months, while the rest stop at three. A January start
+month therefore holds 45 members in total, and all of them enter one plume.
+
+Each member's monthly maps are turned into indices exactly as above: anomaly
+against the drift climatology for the same initialization month and verifying
+month, weighting, then the projection index. Target months without a drift
+file are skipped. The figure follows the layout of the GMAO Nino 3.4 plume
+plots: the recent observed index as a solid black lead-in (computed by
+`05_observed_recent.py`, which measures recent GiOCEAN months against the
+fixed patterns on Discover), each member dashed in its start date's colour,
+and the ensemble mean as a heavy red line. The mean at each target month is
+taken over the members that reach it, so it rests on all 45 members for the
+first two target months and on the extended subset beyond.
+
+Each lead is measured against the pattern set of the season its verifying
+month falls in, so a plume crossing a season boundary changes yardstick
+there; curves should be read within a season.
+
 ## Outputs
 
 ```
@@ -175,6 +216,8 @@ outputs/<level>hPa/<season>/<region>/lead<L>/<source>/forecast_indices.csv   hin
 outputs/<level>hPa/<season>/<region>/lead<L>/<source>/verification_REOF<n>.png  their verification figures
 outputs/<label>/<level>hPa/<region>/<baseline>/forecast_indices.csv         one live forecast
 outputs/<label>/<level>hPa/<region>/<baseline>/indices.png                  its summary figure
+outputs/plumes/<label>/<level>hPa/<region>/<method>/plume_REOF<n>.png       the forecast plumes
+outputs/observed_recent/<level>hPa/<region>/<method>/observed_indices.csv   the plume's observed lead-in
 ```
 
 Hindcasts are produced from two input sources, written to separate folders so
