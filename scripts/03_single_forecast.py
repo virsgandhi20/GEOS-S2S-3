@@ -24,7 +24,7 @@ Writes a CSV (one row per lead) and a small figure of the leading indices:
 
 To run (on Discover):
     module load python/GEOSpyD
-    python scripts/02_realtime_indices.py
+    python scripts/03_single_forecast.py
 """
 
 import os

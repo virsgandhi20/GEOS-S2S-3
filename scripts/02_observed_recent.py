@@ -16,7 +16,7 @@ observed segment:
 
 To run (on Discover):
     module load python/GEOSpyD
-    python scripts/05_observed_recent.py
+    python scripts/02_observed_recent.py
 """
 
 import os

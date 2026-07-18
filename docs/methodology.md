@@ -1,91 +1,60 @@
 # Methodology
 
-This document describes how the forecast teleconnection indices are computed
-and the reasoning behind each step. Each section names the function that
-implements it, so the document can be read alongside the code. The settings
-that control a run are at the top of each script.
+This document describes how the GEOS-S2S-3 forecast teleconnection indices
+and the plume figures are computed, with the reasoning behind each step. Each
+section names the function that implements it, so the document can be read
+alongside the code. The settings that control a run are at the top of each
+script.
 
 ## Overview
 
 The GiOCEAN analysis identifies the recurring patterns of Northern Hemisphere
-height variability (the North Atlantic Oscillation, the Pacific/North American
-pattern, and so on) and saves them as data (`patterns.nc`). This repository
-does not derive any new patterns. Each forecast height map is instead measured
-against the saved patterns: a regression determines how much of each pattern
-is present in the map. The result is one number per pattern per forecast, a
-teleconnection index, on the same scale as the historical record. A
+height variability (the North Atlantic Oscillation, the Pacific/North
+American pattern, and so on) and saves them as data (`patterns.nc`). This
+repository does not derive any new patterns. Each forecast height map is
+measured against the saved patterns, giving one teleconnection index per
+pattern per forecast, on the same scale as the historical record. A
 complicated forecast map is thereby reduced to a short set of interpretable
-quantities, such as a positive NAO phase and a negative PNA phase, which can be
-compared directly with observations and with the historical indices.
+quantities, such as a positive NAO phase and a negative PNA phase.
 
-The target system is GEOS-S2S-3, and the main product is a forecast plume per
-mode from its near-real-time ensemble. The method was developed and verified
-on the GEOS-S2S-2 hindcast archive, whose decades of past forecasts allow the
-forecast indices to be checked against the observed record; that verification
-is what supports the real-time products.
+The method was developed and verified on the GEOS-S2S-2 hindcast archive
+(the GEOS-S2S-2 repository), where the indices could be checked against the
+observed record; the leading winter modes verify at about 0.6 correlation at
+one month lead. The identical chain runs here on the GEOS-S2S-3
+near-real-time forecasts.
 
-## The datasets and their consequences for the code
+## The dataset and its consequences for the code
 
-GEOS-S2S is a forecast system: a new forecast is initialized every five days,
-lead month 1 is the month after the initialization month, and each run
-carries up to about nine lead months, one monthly file per lead.
+The GEOS-S2S-3 near-real-time archive (PFE) holds an initialization every
+five days, each carrying five ensemble members; a subset of members,
+including several on the month's final start date (which carries fifteen),
+extends to nine lead months while the rest stop at three. Every run includes
+the partial initialization month itself, and all available forecast months
+are processed. The height field `H` sits on pressure levels, on the same
+half-degree grid as GiOCEAN, so no regridding is needed (`read_field` falls
+back to interpolation should a dataset differ).
 
-The GEOS-S2S-3 near-real-time archive (PFE) keeps one directory per start
-date with five ensemble members each; a subset of members, including several
-on the month's final start date (which carries fifteen), extends to nine
-lead months while the rest stop at three. The height field `H` sits on
-pressure levels, and the drift climatology (2001-2020) provides one baseline
-file per initialization month and verifying month.
+## The calculation, per member and forecast month
 
-The GEOS-S2S-2 hindcast archive (Discover) keeps initializations from 1981
-under `runx/<year>/` as directories such as `dec02`, `dec07`, `feb10`, with
-member numbering that varies between initializations (`find_forecasts`
-discovers the members by glob rather than assuming a fixed set). The height
-fields `H500` and `H250` come ready-made in the `geosgcm_vis2d` collection.
+### 1. The drift climatology, read from the archive
 
-Both systems use the same half-degree grid as GiOCEAN, so the fit requires
-no regridding; `read_field` falls back to interpolation should a dataset
-differ.
+Forecast models drift: the model's typical lead-1 January differs from its
+typical lead-7 January, and both differ from the observed January climate.
+Anomalies must therefore be taken against the model's own behaviour for the
+same initialization month and lead. The archive provides this as a
+precomputed drift climatology (2001-2020), one file per initialization
+month and verifying month; the code reads these files (`drift_file`) and
+does not compute the climatology itself. Forecast months without a drift
+file are skipped with a note.
 
-One property of forecast models shapes the anomaly step: drift. A model drifts
-away from reality as the lead grows, so its typical lead-1 January differs
-from its typical lead-7 January, and both differ from the observed January
-climate. Anomalies must therefore be taken against the model's own behaviour
-at the same initialization date and lead; otherwise the drift enters the
-indices as a spurious signal.
-
-## The index calculation, developed on the hindcasts
-
-Implemented by `01_forecast_indices.py` on the GEOS-S2S-2 hindcasts, one case
-at a time (a level, a set of initialization months, a lead, a region); the
-same chain, with the drift climatology as the baseline, runs inside the
-GEOS-S2S-3 products. Let `F(d, y)` denote the forecast
-height map initialized on date `d` (for example `dec27`) of year `y`, at the
-fixed lead.
-
-### 1. Climatology per initialization date and lead
+### 2. The anomaly
 
 ```
-C(d) = mean over years y of F(d, y)
+A = F - drift
 ```
 
-`C(d)` is the model's typical prediction at this lead for forecasts started on
-date `d`. Because the average is taken at a fixed initialization date and
-lead, the drift is contained in the baseline and cancels exactly when
-subtracted. (In the code: the `by_init` grouping and the `climatology`
-dictionary.)
-
-### 2. Anomaly
-
-```
-A(d, y) = F(d, y) - C(d)
-```
-
-The forecast's departure from its own norm. By construction, the anomalies for
-each initialization date sum to zero over the years, so the mean index over
-all forecasts in a case must equal zero to rounding. The computed value is
-0.000 over 448 winter forecasts, which follows from the algebra rather than
-from chance and serves as a check that the implementation matches it.
+The forecast's departure from the model drift. Subtracting the drift file
+removes the model drift from every forecast before any index is computed.
 
 ### 3. Area weighting
 
@@ -93,192 +62,102 @@ from chance and serves as a check that the implementation matches it.
 A~ = A * sqrt(cos(latitude))     (analysis.area_weight)
 ```
 
-Grid cells shrink towards the pole, and the square root of the cosine restores
-equal-area contributions once quantities are squared downstream. Equally
-important is consistency: the historical patterns were derived in this
-weighted space, so any field fitted against them must receive the same
-transformation first. The weighting is applied before the fit in all cases.
+Grid cells shrink towards the pole, and the square root of the cosine
+restores equal-area contributions. Equally important is consistency: the
+historical patterns were derived in this weighted space, so any field
+measured against them must receive the same transformation first.
 
-### 4. The least-squares fit
+### 4. The index, against standardized patterns
 
-The rotated patterns are loaded from `patterns.nc`. Each pattern map is
-flattened into a column, and the ten columns are stacked into a matrix `E`
-(grid points by modes). The weighted anomaly is flattened into a vector `y`,
-with grid points that are missing in either (heights below ground) removed
-from both. The system
+Two conventions are implemented (`analysis.fit_indices`), and each writes to
+its own folder:
 
-```
-y = E b + error
-```
+- **Projection** (the default, the group's convention): the weighted anomaly
+  is projected onto each pattern one at a time. The patterns are
+  standardized: each is scaled to unit length before the projection, and
+  the raw projection is then standardized with the mean and spread of the
+  same projection applied to the historical maps (`proj_mean` and
+  `proj_std` in the pattern file). The result measures how much the map
+  resembles that single pattern.
+- **Least squares**: all patterns are fitted at once (`y = E b + error`),
+  so each coefficient is the amount of that pattern after accounting for
+  the others. Scaled with `index_mean` and `index_std`.
 
-is solved for `b` by least squares (`analysis.fit_indices`, via
-`numpy.linalg.lstsq`), which minimises `|| y - E b ||^2`. The solution is the
-combination of the ten known patterns that best reconstructs the forecast map:
-`b1` measures how much of pattern 1 is present, `b2` how much of pattern 2,
-and so on. All ten coefficients are fitted simultaneously. This matters
-because the rotated patterns are not exactly orthogonal on the masked region;
-the simultaneous fit is a multiple regression rather than ten independent
-projections, and it accounts for the overlap between patterns.
+In both conventions the final index is standardized on the historical
+scale: a value of -1.5 means 1.5 historical standard deviations into the
+negative phase, directly comparable with the observed record.
 
-### 4b. The projection index (the per-pattern convention)
+### 5. Season matching
 
-An alternative to the simultaneous fit is used for the real-time products:
-the weighted anomaly is projected onto each pattern one at a time, with the
-pattern normalized to unit length. The result measures how much the map
-resembles that single pattern, without separating the overlap between
-patterns. The two conventions coincide for orthogonal patterns and differ
-mildly for rotated ones; the projection is the convention used by CPC and by
-the group's earlier forecast work, so the forecast indices become directly
-comparable with those. The `method` argument of `fit_indices` selects
-between them ("least_squares" and "projection"), and each writes to its own
-folder.
-
-### 5. Scaling to the historical record
-
-`patterns.nc` also carries the mean and standard deviation of each historical
-index. The final index is
-
-```
-I_j = (b_j - mean_j) / std_j
-```
-
-The projection index is scaled the same way, with the mean and spread of the
-same projection applied to the historical maps (`proj_mean` and `proj_std`
-in the pattern file), so both conventions place forecast and observation on
-one scale.
-
-This places every forecast on the historical scale: an index of -1.7 in a 2009
-forecast has the same meaning as -1.7 in the GiOCEAN record, namely 1.7
-historical standard deviations into the negative phase. The historical mean is
-close to zero and the spread close to one by construction, so the step is
-nearly the identity, but applying it exactly removes any residual difference
-in convention.
+Each forecast month is measured against the pattern set of the season it
+falls in (the `SEASON_OF` mapping: MAM patterns for a March map, and so
+on). REOF2 in May belongs to the spring pattern set and REOF2 in June to
+the summer set, two different physical structures, so index curves should
+be read within a season; a jump across a season boundary partly reflects
+the change of pattern set rather than the forecast itself.
 
 ## Validity on data the patterns have not seen
 
-Two properties support applying the fixed patterns to new data:
-
-- **Consistency.** Applied to a historical GiOCEAN map, this procedure
-  recovers the historical rotated indices exactly, because those indices are
-  themselves the least-squares solution of the same equation; that is how
-  rotated principal component analysis defines them. This was verified
-  numerically on synthetic data (agreement to 1e-10). The forecast indices are
-  therefore the out-of-sample extension of the historical ones: the same
-  formula applied to new data.
 - **No refitting.** The patterns, means and spreads are frozen from the
   reanalysis. Forecasts are only measured against them and never used to
-  define anything, so there is no leakage, and the yardstick applies equally
-  to 1981, to 2026, or to any other year.
-
-One limitation should be stated: least squares represents only the part of a
-forecast map that projects onto the ten patterns. Structure orthogonal to all
-of them remains in the residual and is not summarised by the indices. This is
-inherent to what an index is, but it bounds what the indices can be taken to
-say about a forecast.
-
-## The real-time case
-
-`02_realtime_indices.py` runs the same chain on a single live forecast (the
-February 2026 ensemble mean, which arrives in the GiOCEAN-style pressure-level
-format, so the level is selected through the `lev` coordinate rather than read
-as a 2D field). It differs from the hindcast processing in two respects:
-
-- **Climatology.** The anomaly is taken against the GEOS-S2S-3 drift
-  climatology (2001-2020), one file per initialization month and verifying
-  month, which removes the model's drift with lead just as the per-init
-  climatology does for the hindcasts. The GiOCEAN monthly mean remains
-  available as an alternative baseline (the `BASELINE` setting); it was the
-  stopgap used before the drift files were identified, and it ignores the
-  drift. Each baseline writes to its own folder.
-- **Season matching.** Each lead verifies in a different month, so each lead
-  is fitted against the pattern set for the season containing its verifying
-  month (the `SEASON_OF` mapping: MAM patterns for a March map, and so on).
-  This has an interpretation consequence: REOF2 in May belongs to the spring
-  pattern set and REOF2 in June to the summer set, two different physical
-  structures. Index curves should be read within a season; a jump across a
-  season boundary partly reflects the change of pattern set rather than the
-  forecast itself. The `patterns` column in the CSV records the set used for
-  each row.
+  define anything, so there is no leakage, and the yardstick applies
+  equally to any year.
+- **Limitation.** An index represents only the part of a map that resembles
+  its pattern; structure unlike all ten patterns is not summarised by the
+  indices.
 
 ## The forecast plume
 
-`04_plume_s2s3.py` processes one initialization month of the GEOS-S2S-3
-near-real-time archive on PFE. That archive holds an initialization every
-five days, each carrying five ensemble members; a subset of members
-(including several on the month's final start date, which carries fifteen)
-extends to nine lead months, while the rest stop at three. A January start
-month therefore holds 45 members in total, and all of them enter one plume.
+`01_plume_forecasts.py` processes one initialization month at a time: every
+member from every start date, every available forecast month (45 members
+for a January start month). Each member's maps become indices exactly as
+above, and the figure follows the layout of the GMAO Nino 3.4 plume plots:
 
-Each member's monthly maps are turned into indices exactly as above: anomaly
-against the drift climatology for the same initialization month and verifying
-month, weighting, then the projection index. Target months without a drift
-file are skipped. The figure follows the layout of the GMAO Nino 3.4 plume
-plots: the recent observed index as a solid black lead-in (computed by
-`05_observed_recent.py`, which measures recent GiOCEAN months against the
-fixed patterns on Discover), each member dashed in its start date's colour,
-and the ensemble mean as a heavy red line. The mean at each target month is
-taken over the members that reach it, so it rests on all 45 members for the
-first two target months and on the extended subset beyond.
+- the recent observed index as a solid black lead-in, computed by
+  `02_observed_recent.py`, which measures recent GiOCEAN months against the
+  fixed patterns with the same convention
+- each member as a dashed line in its start date's colour
+- the ensemble mean as a heavy red line, averaged at each forecast month
+  over the members that reach it (all 45 for the first months, the
+  extended subset beyond)
 
-Each lead is measured against the pattern set of the season its verifying
-month falls in, so a plume crossing a season boundary changes yardstick
-there; curves should be read within a season.
+## The single-forecast case
+
+`03_single_forecast.py` runs the same chain on one forecast delivered as a
+set of ensemble-mean files (the February 2026 case). The anomaly baseline
+is a setting: the drift climatology (the proper choice), or the GiOCEAN
+monthly mean (an earlier alternative that ignores the model drift). Each
+baseline and convention writes to its own folder.
 
 ## Outputs
 
 ```
-outputs/plumes/<label>/<level>hPa/<region>/<method>/            the forecast plumes and their CSV
-outputs/observed_recent/<level>hPa/<region>/<method>/            the plumes' observed lead-in
-outputs/realtime/<label>/<level>hPa/<region>/<baseline>/<method>/  one single forecast
-outputs/hindcasts/<level>hPa/<season>/<region>/lead<L>/<source>/<method>/  the GEOS-S2S-2 hindcast
-                                                                 indices and verification figures
+outputs/plumes/<label>/<level>hPa/<region>/<method>/plume_REOF<n>.png
+outputs/plumes/<label>/<level>hPa/<region>/<method>/forecast_indices.csv
+outputs/observed_recent/<level>hPa/<region>/<method>/observed_indices.csv
+outputs/realtime/<label>/<level>hPa/<region>/<baseline>/<method>/...
 ```
 
-Hindcasts are produced from two input sources, written to separate folders so
-the results can be compared: `members` processes the individual forecasts (one
-per five-day start date, one row per member), while `ensemble_mean` processes the
-archive's pre-averaged product, one forecast per initialization month.
-Averaging over members retains the predictable part of a forecast and damps
-the unpredictable part, so the ensemble-mean indices are smoother and fewer;
-the per-member indices are noisier but show the spread between forecasts. The
-climatology grouping adapts to the source: per start date for `members`, per
-initialization month for `ensemble_mean`.
-
-The verification figures (`03_verification_plot.py`) place each mode's
-pattern map above the forecast index and the historical GiOCEAN index over
-the hindcast years, with their correlation printed. The forecast curve is the
-average over everything verifying in a given month; the correlation runs over
-the months both records cover (the GiOCEAN seasonal index has no March, so
-lead-1 winter forecasts verify against January and February only).
-
-A hindcast row records the initialization date, the member, the verifying
-month, and the ten indices for that forecast. All values are in standard
-deviations on the historical scale and are directly comparable with the
-historical index files in the GiOCEAN repository. Each live forecast is
-written to its own dated folder (the `LABEL` setting), so successive months
-accumulate side by side rather than overwriting one another.
+A plume CSV records the initialization date, the member, the verifying
+month, the pattern season, and the ten indices, all in standard deviations
+on the historical scale. Each initialization month writes to its own dated
+folder, so successive months accumulate side by side.
 
 ## Checks
 
-- On synthetic data, the fit recovers known indices from maps built with them,
-  handles missing grid points, and scales linearly (doubling the anomaly
-  doubles the index).
-- The lead arithmetic wraps the year correctly (a December start at lead 1
-  verifies in January of the following year).
-- The mean index over all 448 winter hindcasts is 0.000, as the anomaly
-  construction requires.
-- The winter of 2009/10, the most negative NAO winter in the record, appears
-  clearly in the hindcast indices, including the transition from positive to
-  strongly negative values as the initialization dates approached the event.
+- The index computation recovers known indices from synthetic maps, handles
+  missing grid points, and scales linearly.
+- The lead arithmetic wraps the year correctly (a December start verifies
+  January of the following year at lead 1).
+- The verification of the same chain on the GEOS-S2S-2 hindcasts (that
+  repository) is the evidence that the indices carry forecast skill.
 
 ## Reproducing
 
 ```bash
-python scripts/04_plume_s2s3.py          # the forecast plume (PFE)
-python scripts/05_observed_recent.py     # its observed lead-in (Discover)
-python scripts/02_realtime_indices.py    # one single forecast (Discover)
-python scripts/01_forecast_indices.py    # GEOS-S2S-2 hindcast indices (Discover)
-python scripts/03_verification_plot.py   # their verification figures (Discover)
+python scripts/01_plume_forecasts.py     # the forecast plume (PFE)
+python scripts/02_observed_recent.py     # its observed lead-in (Discover)
+python scripts/03_single_forecast.py     # one single forecast (Discover)
 ```
 
 The GiOCEAN repository must have been run with the regression display first,

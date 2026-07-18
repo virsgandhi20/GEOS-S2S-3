@@ -5,10 +5,11 @@ months, and their average as a thick solid line (the layout of the GMAO
 Nino 3.4 plume plots).
 
 One initialization month is processed at a time. The archive holds an
-initialization every five days, each with five members and three lead months,
-except the last initialization of the month, which has fifteen members and
-nine lead months (so a January start month carries 45 members in total). All
-members from all start dates in the month go into one plume.
+initialization every five days with five members each, except the last
+initialization of the month, which has fifteen (so a January start month
+carries 45 members in total). All members from all start dates go into one
+plume, and every available forecast month is plotted, including the partial
+initialization month itself (a January 1 start contributes January onward).
 
 The chain per member and lead: anomaly against the drift climatology for the
 same initialization month and verifying month, the usual latitude weighting,
@@ -29,7 +30,7 @@ match takes care of that). Outputs:
     outputs/plumes/2026jan/500hPa/20N_90N/projection/plume_REOF1.png ...
 
 To run (on PFE):
-    python scripts/04_plume_s2s3.py
+    python scripts/01_plume_forecasts.py
 """
 
 import os
@@ -75,7 +76,7 @@ SEASON_OF   = {12: "DJF", 1: "DJF", 2: "DJF",
 N_PLOT      = 10               # modes to draw a plume for
 
 # recent observed indices for the lead-in segment of the plume (written by
-# 05_observed_recent.py on Discover and committed, since the GiOCEAN data
+# 02_observed_recent.py on Discover and committed, since the GiOCEAN data
 # does not exist on PFE). drawn where the file is present.
 OBSERVED    = os.path.join("..", "outputs", "observed_recent",
                            "{level}hPa", "{domain}", "{method}",
@@ -103,8 +104,9 @@ def find_members():
                     member_dir, COLLECTION,
                     f"{init}.{COLLECTION}.monthly.*.nc4"))):
                 match = _TAG.search(os.path.basename(path))
-                if match and match.group(1) != f"{INIT_YEAR}{INIT_MONTH:02d}":
-                    files[match.group(1)] = path   # skip the partial init month
+                if match:
+                    files[match.group(1)] = path   # every month, including
+                                                   # the partial init month
             if files:
                 records.append({"init": init,
                                 "member": os.path.basename(member_dir),
@@ -167,7 +169,7 @@ def plume_plot(months, groups, mean, observed, heading, out_png):
             label="Ensmean")
     ax.axhline(0, color="grey", linewidth=0.5)
     ax.set_ylim(-3, 3)
-    ax.set_ylabel("index (standard deviations)")
+    ax.set_ylabel("index")
     ax.set_xlabel("Forecast Month")
     ax.set_title(heading)
     ax.legend(loc="upper left", fontsize=8)
@@ -260,8 +262,7 @@ def main():
             plume_plot(
                 month_names, groups, mean, read_observed(level, mode),
                 f"REOF{mode+1} {VARIABLE} ({int(level)}hPa): "
-                f"{r_year} {_MONTH[r_month].lower()} released forecast "
-                f"({METHOD})",
+                f"{r_year} {_MONTH[r_month].lower()} released forecast",
                 os.path.join(out, f"plume_REOF{mode+1}.png"))
 
         for setup in month_setup.values():

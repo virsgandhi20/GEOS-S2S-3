@@ -1,19 +1,13 @@
 """
-Helpers for turning GEOS-S2S forecasts into teleconnection indices.
+Helpers for turning GEOS-S2S-3 forecasts into teleconnection indices.
 
 The idea: the GiOCEAN work saved its rotated patterns (patterns.nc, one per
-level/season/region). Here each forecast height anomaly is fitted against those
-patterns by least squares, giving an index per mode for every forecast. The
-scripts set their options at the top and call the functions here.
-
-Forecast quirks these functions absorb:
-  - initializations sit in directories named like feb10 or nov07, one every
-    five days, under runx/<year>/
-  - ensemble member numbering varies by initialization (some have ens1, some
-    ens2..ens5), so members are discovered by glob, never assumed
-  - a forecast's climatology depends on the initialization date and the lead
-    (models drift with lead), so anomalies are taken against the mean over
-    years for the same init date and lead
+level/season/region). Here each forecast height anomaly is measured against
+those patterns, giving an index per mode for every forecast. The anomaly
+baseline is the drift climatology read from the archive, one file per
+initialization month and verifying month, so the model drift is removed
+before the index is computed. The scripts set their options at the top and
+call the functions here.
 """
 
 import os
@@ -32,62 +26,6 @@ def verifying_month(init_year, init_month, lead):
     initialization month."""
     total = init_month + lead
     return init_year + (total - 1) // 12, (total - 1) % 12 + 1
-
-
-def find_forecasts(root, years, init_months, lead,
-                   collection="geosgcm_vis2d", members="*"):
-    """Find the monthly forecast files for the given initialization months and
-    lead. Returns a list of records with the init date, member and file path.
-
-    members: glob for the member number, "*" for every member found, "1" for
-    just ens1, "[2-5]" for ens2 to ens5, and so on."""
-    records = []
-    for year in years:
-        for month in init_months:
-            v_year, v_month = verifying_month(year, month, lead)
-            tag = f"{v_year}{v_month:02d}"
-            pattern = os.path.join(
-                str(root), str(year), f"{_MONTH_DIR[month]}??",
-                f"ens{members}", collection,
-                f"*.{collection}.monthly.{tag}.nc4")
-            for path in sorted(glob.glob(pattern)):
-                parts = path.split(os.sep)
-                records.append({"year": year,
-                                "init": parts[-4],      # e.g. feb10
-                                "member": parts[-3],    # e.g. ens1
-                                "verifying": tag,
-                                "path": path})
-    return records
-
-
-def find_ensemble_mean(root, years, init_months, lead,
-                       collection="geosgcm_vis2d"):
-    """Find the pre-averaged (ensemble mean) monthly forecast files. These sit
-    in their own tree, one file per initialization month and verifying month,
-    with the averaging over start dates and members already done:
-
-        <root>/<year>/<mon>/<mon>.<collection>.monthly.<verifying YYYYMM>.nc4
-
-    (Each mean file has a .var.nc4 companion holding the variance across
-    members; the exact-name match leaves those out.)
-
-    Returns records shaped like those from find_forecasts, with the member set
-    to "ensmean" and the initialization identified by month name alone."""
-    records = []
-    for year in years:
-        for month in init_months:
-            v_year, v_month = verifying_month(year, month, lead)
-            tag = f"{v_year}{v_month:02d}"
-            pattern = os.path.join(
-                str(root), str(year), _MONTH_DIR[month],
-                f"{_MONTH_DIR[month]}.{collection}.monthly.{tag}.nc4")
-            for path in sorted(glob.glob(pattern)):
-                records.append({"year": year,
-                                "init": _MONTH_DIR[month],
-                                "member": "ensmean",
-                                "verifying": tag,
-                                "path": path})
-    return records
 
 
 def read_field(path, variable, lat, lon, level=None):
