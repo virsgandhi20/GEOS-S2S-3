@@ -170,7 +170,7 @@ def main():
         ax.set_title(f"{VARIABLE} ({int(level)}hPa) forecast indices, "
                      f"{_MONTH[INIT_MONTH]} {INIT_YEAR} start")
         ax.legend()
-        fig.savefig(os.path.join(out, "indices.png"), dpi=300,
+        fig.savefig(os.path.join(out, "indices.png"), dpi=600,
                     bbox_inches="tight")
         plt.close(fig)
         print("  saved:", os.path.join(out, "indices.png"))

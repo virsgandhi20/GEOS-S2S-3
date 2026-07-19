@@ -175,7 +175,7 @@ def plume_plot(months, groups, mean, observed, heading, out_png):
     ax.legend(loc="upper left", fontsize=8)
     ax.grid(linewidth=0.3, alpha=0.5)
     os.makedirs(os.path.dirname(out_png), exist_ok=True)
-    fig.savefig(out_png, dpi=300, bbox_inches="tight")
+    fig.savefig(out_png, dpi=600, bbox_inches="tight")
     plt.close(fig)
     print("  saved:", out_png)
 
