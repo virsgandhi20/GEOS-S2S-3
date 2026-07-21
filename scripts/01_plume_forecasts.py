@@ -48,7 +48,7 @@ import analysis
 # ===== settings ============================================================
 # the initialization month to process (all start dates inside it)
 INIT_YEAR   = 2026
-INIT_MONTH  = 1
+INIT_MONTH  = 7
 
 # where the near-real-time forecasts and the drift climatology live (PFE).
 # the collection is a plain string so any collection can be used.
