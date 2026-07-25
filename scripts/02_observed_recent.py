@@ -27,7 +27,8 @@ import analysis
 
 # ===== settings ============================================================
 # the months to compute, newest last (YYYYMM)
-MONTHS      = ["202511", "202512", "202601"]
+MONTHS      = ["202511", "202512", "202601", "202602", "202603", "202604",
+               "202605", "202606", "202607"]
 
 VARIABLE    = "H"
 LEVELS      = [500, 250]
@@ -35,6 +36,9 @@ DOMAIN      = "20N_90N"
 METHOD      = "projection"     # match the plume's METHOD
 
 REANALYSIS_DIR = "/discover/nobackup/projects/gmao/geos-s2s-3/GiOCEAN_e1/atm_inst_6hr_glo_L720x361_p49"
+# recent months continue in the near-real-time GiOCEAN stream; any month not
+# found in the main directory is looked up here
+NRT_DIR        = "/gpfsm/dnb07/projects/p236/GiOcean-NRT/atm_inst_6hr_glo_L720x361_p49"
 CLIM_YEARS     = range(1998, 2025)
 
 PATTERNS    = "/discover/nobackup/vgandhi2/GiOCEAN/outputs/{level}hPa/{season}/{domain}/regression/patterns.nc"
@@ -49,9 +53,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def month_file(tag):
     import glob
-    matches = glob.glob(os.path.join(REANALYSIS_DIR,
-                                     f"*.monthly.{tag}.nc4"))
-    return matches[0] if matches else None
+    for root in (REANALYSIS_DIR, NRT_DIR):
+        matches = glob.glob(os.path.join(root, f"*.monthly.{tag}.nc4"))
+        if matches:
+            return matches[0]
+    return None
 
 
 def main():
