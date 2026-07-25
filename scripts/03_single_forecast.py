@@ -167,8 +167,9 @@ def main():
         ax.axhline(0, color="k", linewidth=0.5)
         ax.set_ylabel("index")
         ax.set_xlabel("verifying month")
-        ax.set_title(f"{VARIABLE} ({int(level)}hPa) forecast indices, "
-                     f"{_MONTH[INIT_MONTH]} {INIT_YEAR} start")
+        ax.set_title(f"GEOS-S2S-3 {VARIABLE} {int(level)}hPa "
+                     f"{DOMAIN.replace(chr(95), chr(45))} forecast indices, "
+                     f"{_MONTH[INIT_MONTH]} {INIT_YEAR} start (obs patterns: GiOCEAN)")
         ax.legend()
         fig.savefig(os.path.join(out, "indices.png"), dpi=600,
                     bbox_inches="tight")

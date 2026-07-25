@@ -261,8 +261,10 @@ def main():
             mean = np.nanmean(np.array(everything, dtype=float), axis=0)
             plume_plot(
                 month_names, groups, mean, read_observed(level, mode),
-                f"REOF{mode+1} {VARIABLE} ({int(level)}hPa): "
-                f"{r_year} {_MONTH[r_month].lower()} released forecast",
+                (f"GEOS-S2S-3 REOF{mode+1} {VARIABLE} {int(level)}hPa "
+                 f"{DOMAIN.replace(chr(95), chr(45))}: {r_year} "
+                 f"{_MONTH[r_month].lower()} released forecast "
+                 f"(obs: GiOCEAN)"),
                 os.path.join(out, f"plume_REOF{mode+1}.png"))
 
         for setup in month_setup.values():
