@@ -14,6 +14,9 @@ are stamped by the averaged month (YYYYMM01_0000z); the incomplete first
 month carries a "-partial" suffix and is excluded. The SST variable name
 is auto-detected from a small candidate list.
 
+The observed lead-in comes from the committed CSV written by
+05_observed_nino34.py on Discover, drawn where the file is present.
+
 Outputs:
 
     outputs/plumes/2026jun/nino34/forecast_nino34.csv
@@ -50,6 +53,11 @@ SST_CANDIDATES = ["TSFG", "BULK_OCEANTEMP", "TS", "SST"]
 # the Nino 3.4 box
 LAT_MIN, LAT_MAX = -5.0, 5.0
 LON_MIN, LON_MAX = -170.0, -120.0
+
+# recent observed anomalies for the lead-in segment (written by
+# 05_observed_nino34.py on Discover and committed)
+OBSERVED    = os.path.join("..", "outputs", "observed_recent", "nino34",
+                           "observed_nino34.csv")
 # ===========================================================================
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -115,6 +123,21 @@ def box_mean(dataset, name):
     return float(field.weighted(weights).mean(("lat", "lon")))
 
 
+def read_observed():
+    """The recent observed anomalies, as {YYYYMM: value}, or an empty dict
+    where the file is absent."""
+    path = os.path.normpath(os.path.join(script_dir, OBSERVED))
+    if not os.path.exists(path):
+        return {}
+    table = {}
+    with open(path, newline="") as handle:
+        reader = csv.reader(handle)
+        next(reader)
+        for row in reader:
+            table[row[0]] = float(row[1])
+    return table
+
+
 def main():
     members = find_members()
     if not members:
@@ -170,7 +193,17 @@ def main():
     mean = [np.mean([v[t] for v in table.values() if t in v])
             for t in months]
 
+    observed = read_observed()
+    obs_months = sorted(t for t in observed if t < months[0])
+    obs_labels = [f"{_MONTH[int(t[4:])]}\n{t[:4]}" for t in obs_months]
+    pad = [np.nan] * len(obs_months)
+    labels = obs_labels + labels
+
     fig, ax = plt.subplots(figsize=(11, 6))
+    if obs_months:
+        ax.plot(labels[:len(obs_months)],
+                [observed[t] for t in obs_months],
+                "-", color="black", linewidth=2.5, label="GiOCEAN")
     colors = plt.get_cmap("tab10")
     inits = sorted({k[0] for k in table})
     for i, init in enumerate(inits):
@@ -179,11 +212,11 @@ def main():
         for (r_init, member), values in sorted(table.items()):
             if r_init != init:
                 continue
-            curve = [values.get(t, np.nan) for t in months]
+            curve = pad + [values.get(t, np.nan) for t in months]
             ax.plot(labels, curve, "--", color=colors(i % 10),
                     linewidth=0.9, label=label if first else None)
             first = False
-    ax.plot(labels, mean, "o-", color="red", linewidth=2.5, label="Ensmean")
+    ax.plot(labels, pad + mean, "o-", color="red", linewidth=2.5, label="Ensmean")
     ax.axhline(0, color="grey", linewidth=0.5)
     ax.set_ylabel("Nino 3.4 SST anomaly (K)")
     ax.set_xlabel("Forecast Month")
