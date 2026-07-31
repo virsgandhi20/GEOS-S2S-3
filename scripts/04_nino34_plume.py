@@ -9,9 +9,10 @@ Nino 3.4 box (5S-5N, 170W-120W). No pattern projection is involved; the
 index is the box-mean anomaly itself, in kelvin.
 
 The monthly ocean fields come from the ocn_tavg_1mo collection, which has
-a drift climatology in the same archive as the height fields. The SST
-variable name is auto-detected from a small candidate list, so the script
-adapts if the collection names it TS or SST.
+a drift climatology in the same archive as the height fields. Ocean files
+are stamped by the averaged month (YYYYMM01_0000z); the incomplete first
+month carries a "-partial" suffix and is excluded. The SST variable name
+is auto-detected from a small candidate list.
 
 Outputs:
 
@@ -44,7 +45,7 @@ DRIFT_ROOT  = "/nobackupp28/knakada/GEOSS2S3/GEOS_fcst/data/DRFT/DRFT_2001_2020/
 COLLECTION  = "ocn_tavg_1mo_glo_L720x361_slv"
 
 # candidate variable names for sea-surface temperature, tried in order
-SST_CANDIDATES = ["TS", "SST", "ts", "sst", "TSKINW"]
+SST_CANDIDATES = ["TSFG", "BULK_OCEANTEMP", "TS", "SST"]
 
 # the Nino 3.4 box
 LAT_MIN, LAT_MAX = -5.0, 5.0
@@ -56,7 +57,7 @@ _MONTH = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 _MONTH_DIR = ["", "jan", "feb", "mar", "apr", "may", "jun",
               "jul", "aug", "sep", "oct", "nov", "dec"]
-_TAG = re.compile(r"\.monthly\.(\d{6})\.nc4$")
+_TAG = re.compile(r"\.(\d{6})01_0000z\.nc4$")
 
 
 def find_members():
@@ -70,7 +71,9 @@ def find_members():
             files = {}
             for path in sorted(glob.glob(os.path.join(
                     member_dir, COLLECTION,
-                    f"{init}.{COLLECTION}.monthly.*.nc4"))):
+                    f"{init}.{COLLECTION}.*_0000z.nc4"))):
+                # "-partial" files (the incomplete first month) fail the
+                # suffix match and are excluded on purpose
                 match = _TAG.search(os.path.basename(path))
                 if match:
                     files[match.group(1)] = path
